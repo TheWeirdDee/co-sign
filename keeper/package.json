@@ -1,0 +1,7 @@
+{
+  "name": "cosign-keeper",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Block watcher that submits resolve(job-id) at deadline blocks. Built in Phase 3 — placeholder only for now (architecture sec.6 monorepo layout).",
+  "type": "module"
+}

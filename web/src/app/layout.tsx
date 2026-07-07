@@ -1,20 +1,33 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Spectral, Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import "./cosign.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// The three faces mandated by the design brief: Spectral (display),
+// Hanken Grotesk (body), IBM Plex Mono (every money figure).
+const spectral = Spectral({
+  weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
   subsets: ["latin"],
+  variable: "--font-spectral",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const hanken = Hanken_Grotesk({
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
+  variable: "--font-hanken",
+});
+
+const plexMono = IBM_Plex_Mono({
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+  variable: "--font-plex-mono",
 });
 
 export const metadata: Metadata = {
-  title: "Co-Sign",
-  description: "Put your money where your trust is.",
+  title: "Co-Sign — Stake Bitcoin on the people you trust",
+  description:
+    "Put your money where your trust is. A reputation-staking primitive on Stacks, built on FlowVault.",
 };
 
 export default function RootLayout({
@@ -25,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${spectral.variable} ${hanken.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

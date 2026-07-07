@@ -1,135 +1,104 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { connect, disconnect, getLocalStorage, isConnected } from "@stacks/connect";
-import {
-  flowVaultRead,
-  isStxAddress,
-  FLOWVAULT_PRINCIPAL,
-  TOKEN_PRINCIPAL,
-  NETWORK,
-  READ_CONTEXT_ADDRESS,
-} from "@/lib/flowvault";
+// Landing — CONVERTED from web/cosign-landing.html (the design source of
+// truth), not regenerated. Markup, copy, and structure are the original's;
+// the connect button is wired to the real wallet and the CTAs route into the
+// app (/create). The hero instrument's animation lives in LiveInstrument.
 
-// Phase 0 proof page: wallet connects and resolves an STX address; a live
-// read-only getCurrentBlockHeight call renders on screen. No Co-Sign logic yet.
-export default function Phase0() {
-  const [stxAddress, setStxAddress] = useState<string | null>(null);
-  const [addressError, setAddressError] = useState<string | null>(null);
-  const [blockHeight, setBlockHeight] = useState<number | null>(null);
-  const [blockError, setBlockError] = useState<string | null>(null);
-  const [connecting, setConnecting] = useState(false);
+import Link from "next/link";
+import Nav from "@/components/Nav";
+import LiveInstrument from "@/components/LiveInstrument";
 
-  const resolveAddress = useCallback(() => {
-    const stored = getLocalStorage();
-    const stx = stored?.addresses?.stx?.[0]?.address ?? null;
-    if (!stx) {
-      setStxAddress(null);
-      return;
-    }
-    if (!isStxAddress(stx)) {
-      setAddressError(`Rejected non-STX address: ${stx}`);
-      setStxAddress(null);
-      return;
-    }
-    setAddressError(null);
-    setStxAddress(stx);
-  }, []);
-
-  useEffect(() => {
-    if (isConnected()) resolveAddress();
-  }, [resolveAddress]);
-
-  const refreshBlockHeight = useCallback(async () => {
-    setBlockError(null);
-    try {
-      const vault = flowVaultRead();
-      const height = await vault.getCurrentBlockHeight(stxAddress ?? READ_CONTEXT_ADDRESS);
-      setBlockHeight(height);
-    } catch (e) {
-      setBlockError(e instanceof Error ? e.message : String(e));
-    }
-  }, [stxAddress]);
-
-  useEffect(() => {
-    refreshBlockHeight();
-    const timer = setInterval(refreshBlockHeight, 30_000);
-    return () => clearInterval(timer);
-  }, [refreshBlockHeight]);
-
-  const handleConnect = async () => {
-    setConnecting(true);
-    setAddressError(null);
-    try {
-      await connect();
-      resolveAddress();
-    } catch (e) {
-      setAddressError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setConnecting(false);
-    }
-  };
-
-  const handleDisconnect = () => {
-    disconnect();
-    setStxAddress(null);
-  };
-
+export default function Landing() {
   return (
-    <main className="flex-1 flex items-center justify-center bg-[#0E1116] text-[#E8E2D2] font-mono">
-      <div className="w-full max-w-xl border border-[#2A2F37] bg-[#161B22] p-8 space-y-6">
-        <header className="flex items-center justify-between">
-          <h1 className="tracking-widest text-sm">CO·SIGN — PHASE 0</h1>
-          {stxAddress ? (
-            <button
-              onClick={handleDisconnect}
-              className="border border-[#2A2F37] px-3 py-1 text-xs hover:border-[#9A968B] focus:outline focus:outline-[#A8823D]"
-            >
-              Disconnect
-            </button>
-          ) : (
-            <button
-              onClick={handleConnect}
-              disabled={connecting}
-              className="border border-[#2A2F37] px-3 py-1 text-xs hover:border-[#9A968B] focus:outline focus:outline-[#A8823D] disabled:opacity-50"
-            >
-              {connecting ? "Connecting…" : "Connect wallet"}
-            </button>
-          )}
+    <main className="cs-page flex-1">
+      <div className="wrap">
+        <Nav />
+
+        <header className="hero">
+          <div>
+            <div className="eyebrow">Reputation-staking · built on FlowVault</div>
+            <h1>
+              Stake Bitcoin on the people you <em>trust</em>.
+            </h1>
+            <p className="lede">
+              A newcomer with no track record gets slow, cautious payouts. Someone who
+              believes in them locks their own Bitcoin to speed it up — and if they&apos;re
+              wrong, that stake pays the person who got let down.
+            </p>
+            <div className="cta-row">
+              <a href="#how" className="btn btn-primary">
+                See how it works
+              </a>
+              <Link href="/create" className="btn btn-ghost">
+                Draft an instrument
+              </Link>
+            </div>
+          </div>
+
+          {/* LIVE INSTRUMENT: the entire mechanism, running */}
+          <LiveInstrument />
         </header>
 
-        <dl className="space-y-4 text-xs">
-          <div>
-            <dt className="text-[#9A968B]">Connected STX address</dt>
-            <dd className="break-all">{stxAddress ?? "— not connected —"}</dd>
-            {addressError && <dd className="text-[#8B2635]">{addressError}</dd>}
-          </div>
-          <div>
-            <dt className="text-[#9A968B]">
-              Live testnet block height (FlowVault getCurrentBlockHeight)
-            </dt>
-            <dd className="text-2xl text-[#A8823D]">
-              {blockHeight !== null ? blockHeight.toLocaleString() : "…"}
-            </dd>
-            {blockError && <dd className="text-[#8B2635] break-all">{blockError}</dd>}
-          </div>
-          <div>
-            <dt className="text-[#9A968B]">FlowVault contract</dt>
-            <dd className="break-all">{FLOWVAULT_PRINCIPAL}</dd>
-          </div>
-          <div>
-            <dt className="text-[#9A968B]">Token</dt>
-            <dd className="break-all">{TOKEN_PRINCIPAL}</dd>
-          </div>
-          <div>
-            <dt className="text-[#9A968B]">Network</dt>
-            <dd>{NETWORK}</dd>
-          </div>
-        </dl>
+        <section className="clauses" id="how">
+          <div className="section-mark">The instrument · three clauses</div>
 
-        <a href="/flows" className="inline-block text-[#A8823D] underline text-xs">
-          Phase 2 flow driver →
-        </a>
+          <div className="clause">
+            <div className="clause-num">Cl. 01</div>
+            <div>
+              <h3>The Stake</h3>
+              <p>
+                To back a newcomer, you lock at least <span className="fig">20%</span>
+                {" of "}the job&apos;s value in your own vault. If they deliver, you earn{" "}
+                <span className="fig">2%</span>. Risking twenty to earn two is the whole
+                point — <strong>no one stakes on a person they don&apos;t believe in.</strong>{" "}
+                That asymmetry is what turns trust from a free gesture into a real signal.
+              </p>
+            </div>
+          </div>
+
+          <div className="clause">
+            <div className="clause-num">Cl. 02</div>
+            <div>
+              <h3>The Binding</h3>
+              <p>
+                Whether the newcomer delivered isn&apos;t decided by a person — it&apos;s
+                decided by whether the locked funds reach the deadline block, which
+                FlowVault&apos;s contract enforces and no one can fake. The chain itself is
+                the witness: <strong>getCurrentBlockHeight</strong>,{" "}
+                <strong>lockUntilBlock</strong>, and <strong>hasLockedFunds</strong> settle
+                it, with no arbitrator in the room.
+              </p>
+            </div>
+          </div>
+
+          <div className="clause">
+            <div className="clause-num">Cl. 03</div>
+            <div>
+              <h3>
+                <span className="rs"></span>The Restitution
+              </h3>
+              <p>
+                When a backer is wrong, the stake doesn&apos;t vanish into the void — it
+                routes <strong>to the client who took a chance on an unknown worker.</strong>{" "}
+                Being wrong pays the person you let down. Restitution is written into the
+                primitive itself, not bolted on as a dispute process.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="close">
+          <p>Put your money where your trust is.</p>
+          <Link href="/create" className="btn btn-primary">
+            Draft an instrument
+          </Link>
+        </section>
+
+        <footer>
+          <div className="foot-mark">CO·SIGN</div>
+          <div className="foot-note">Stacks testnet · FlowVault Builder Bounty</div>
+        </footer>
       </div>
     </main>
   );

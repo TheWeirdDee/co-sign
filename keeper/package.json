@@ -1,7 +1,18 @@
 {
   "name": "cosign-keeper",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "Block watcher that submits resolve(job-id) at deadline blocks. Built in Phase 3 — placeholder only for now (architecture sec.6 monorepo layout).",
-  "type": "module"
+  "description": "Block watcher that submits resolve/disburse/confirm-funding for Co-Sign jobs. The outcome is fixed by chain state; this only submits transactions when the deadline block is reached.",
+  "main": "watch.cjs",
+  "scripts": {
+    "keeper": "node watch.cjs",
+    "start": "node watch.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@stacks/transactions": "^7.2.0",
+    "dotenv": "^16.4.5"
+  }
 }

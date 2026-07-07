@@ -17,7 +17,7 @@ Built for the FlowVault Builder Bounty (Stacks testnet).
 ```
 contracts/   Clarinet project: cosign.clar + tests (runs against the real flowvault-v2
              source, pulled as a testnet requirement)
-keeper/      block watcher that submits resolve() at deadline blocks (Phase 3)
+keeper/      block watcher: submits resolve/disburse/confirm-funding automatically
 web/         Next.js reference implementation (wallet mode via @stacks/connect)
 ```
 
@@ -111,6 +111,44 @@ clarinet check          # cosign.clar type-checks against the real flowvault-v2 
 npm install && npm test # 13 tests: the 10-point architecture checklist + overlap +
                         # unbacked-resolution paths, exercising real FlowVault semantics
 ```
+
+## Keeper (automation)
+
+```bash
+cd keeper
+npm install
+cp .env.example .env   # set KEEPER_PRIVATE_KEY (any key with a little testnet STX)
+npm run keeper         # or `npm start` on Railway/any Node host
+```
+
+Stacks contracts do not self-execute on a timer. **The outcome of every job is
+fully determined by chain state** — `resolve` is permissionless, deadline-gated,
+and idempotent; the keeper only *submits* the transaction when the deadline
+block is reached. Each tick it sweeps all jobs and:
+
+- submits `resolve(job-id)` for open/backed jobs whose deadline has been reached;
+- submits `disburse(job-id)` for resolved jobs whose payout was deferred by the
+  coordinator vault's shared lock (the overlap case), until it succeeds;
+- submits `confirm-funding(job-id)` as a safety net when a newcomer's vault
+  shows live qualifying evidence that hasn't been snapshotted yet.
+
+The keeper key has **no privileged contract role** — all three functions are
+permissionless and their effects are fixed by chain state, so a compromised
+keeper key cannot steal or redirect funds; it can only pay fees to do the
+protocol's own housekeeping. Contract-side idempotency (`ERR-ALREADY-RESOLVED`,
+`ERR-ALREADY-DISBURSED`, `ERR-STILL-LOCKED`) means the keeper can be dumb and
+stateless: rejections are logged and cooled down, never retried hot.
+
+## Phase 4 demo-setup requirement (do not lose this)
+
+In the Phase 2 test run, the backed newcomer's improved lock landed only **1
+block** before the deadline, because job setup consumed most of a 25-block
+window (improvement = stake-ratio × IMPROVEMENT_FACTOR × the *remaining*
+window at deposit time). A naive demo would make the headline benefit — backed
+newcomers get paid faster — visually invisible. The demo MUST use long deadline
+windows (100+ blocks) and/or larger stakes, with the newcomer depositing early
+in the window, so "faster" is visibly faster on screen. Tune the demo window,
+not `IMPROVEMENT_FACTOR`.
 
 ## Web (reference implementation)
 

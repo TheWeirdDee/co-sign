@@ -97,6 +97,10 @@ html{scroll-behavior:smooth}
 .read{font-family:var(--mono);font-size:10.5px;color:var(--bone-dim);border:1px solid var(--hairline);border-radius:2px;padding:5px 9px}
 .read b{color:var(--bone);font-weight:500}
 
+.share{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--bone-dim);background:transparent;border:1px solid var(--hairline);border-radius:2px;padding:5px 10px;cursor:pointer;transition:.2s;white-space:nowrap}
+.share:hover{color:var(--bone);border-color:var(--bone-dim)}
+.share:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
 .replay{position:absolute;bottom:14px;right:16px;font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--bone-dim);background:transparent;border:1px solid var(--hairline);border-radius:2px;padding:6px 12px;cursor:pointer;transition:.2s}
 .replay:hover{color:var(--bone);border-color:var(--bone-dim)}
 .replay:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
@@ -269,11 +273,48 @@ html{scroll-behavior:smooth}
 .pill b{color:var(--brass-lit);font-weight:500}
 .pill .p-seal{color:var(--seal-lit)}
 
-.hero-c{display:flex;flex-direction:column;align-items:center;text-align:center;padding:58px 0 10px}
+.hero-c{display:flex;flex-direction:column;align-items:center;text-align:center;padding:58px 0 10px;position:relative}
+.hero-c > *:not(.hero-bg){position:relative;z-index:1}
 .hero-c .pill{margin-bottom:26px}
 .hero-c h1{max-width:17ch}
-.hero-c .lede{margin:20px auto 0;max-width:52ch}
+.hero-c .lede{margin:16px auto 0;max-width:52ch}
 .hero-c .cta-row{justify-content:center}
+
+/* hero backdrop: faint ledger rules + guilloche rings + a pressing wax seal */
+.hero-bg{position:absolute;inset:-24px -8% 0;z-index:0;pointer-events:none;overflow:hidden;
+  background:repeating-linear-gradient(180deg,transparent 0 47px,rgba(232,226,210,.032) 47px 48px);
+  -webkit-mask-image:radial-gradient(120% 90% at 50% 30%,#000 40%,transparent 92%);
+  mask-image:radial-gradient(120% 90% at 50% 30%,#000 40%,transparent 92%)}
+.hero-ring{position:absolute;right:-90px;top:-60px;width:420px;height:420px;opacity:.5}
+.hero-ring circle{fill:none;stroke:var(--hairline);stroke-width:1;stroke-dasharray:3 6}
+.hero-seal{position:absolute;left:5%;bottom:12%;width:96px;height:96px;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%,#B23A4D,var(--seal) 60%,#5E1A24);
+  border:1px solid #B03A4C;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 0 rgba(0,0,0,.4),inset 0 1px 2px rgba(255,255,255,.18);
+  opacity:.16;animation:press .7s .9s cubic-bezier(.2,.7,.3,1) both}
+.hero-seal span{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:#EAD9CE;text-transform:uppercase}
+@keyframes heroSettle{0%{transform:scale(1.7);opacity:0}60%{transform:scale(.92);opacity:.16}100%{transform:scale(1);opacity:.16}}
+.hero-seal{animation-name:heroSettle}
+
+/* the signature stroke under the headline — draws itself in */
+.sig{width:min(300px,58vw);height:30px;margin:18px auto 0;display:block}
+.sig path{fill:none;stroke:var(--brass);stroke-width:1.6;stroke-linecap:round;
+  stroke-dasharray:1;stroke-dashoffset:1;animation:sigDraw 1.5s .4s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes sigDraw{to{stroke-dashoffset:0}}
+
+/* proof strip — real chain numbers under the CTAs */
+.proof-strip{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;
+  margin-top:30px;font-family:var(--mono);font-size:12px;color:var(--bone-dim)}
+.proof-strip b{color:var(--brass-lit);font-weight:600}
+.proof-strip .sep{opacity:.5}
+.proof-strip a{color:var(--bone-dim);text-decoration:underline;text-underline-offset:3px}
+.proof-strip a:hover{color:var(--bone)}
+
+@media (prefers-reduced-motion: reduce){
+  .sig path{animation:none;stroke-dashoffset:0}
+  .hero-seal{animation:none;opacity:.16}
+}
+@media(max-width:700px){.hero-ring{display:none}.hero-seal{display:none}}
 
 /* the two preview cards under the hero */
 .preview-pair{display:grid;grid-template-columns:1.12fr .88fr;gap:16px;margin:46px 0 6px;align-items:stretch}

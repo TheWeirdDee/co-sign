@@ -18,6 +18,21 @@ import { createJob, explorerTxUrl, listJobs, requiredEscrow } from "@/lib/cosign
 
 const MIN_WINDOW = 30;
 
+// Observed Stacks testnet cadence (~50 s per stacks block). Rough on purpose —
+// it exists so nobody has to think in blocks.
+const SECONDS_PER_BLOCK = 50;
+export function humanWindow(blocks: number): string {
+  if (!Number.isFinite(blocks) || blocks <= 0) return "—";
+  const s = blocks * SECONDS_PER_BLOCK;
+  if (s < 3600) return `${Math.max(1, Math.round(s / 60))} minutes`;
+  if (s < 86_400) {
+    const h = s / 3600;
+    return `${h < 10 ? h.toFixed(1) : Math.round(h)} hours`;
+  }
+  const d = s / 86_400;
+  return `${d < 10 ? d.toFixed(1) : Math.round(d)} days`;
+}
+
 export default function DraftJobModal({
   onClose,
   onDrafted,
@@ -146,15 +161,23 @@ export default function DraftJobModal({
             <label htmlFor="wnd">Deadline · blocks from now</label>
             <input id="wnd" value={window_} onChange={(e) => setWindow(e.target.value)} inputMode="numeric" />
             <div className="hint">
-              144 ≈ a day. Current block {blockHeight?.toLocaleString() ?? "…"} → deadline{" "}
+              {windowBlocks > 0 && (
+                <>
+                  ≈ <b>{humanWindow(windowBlocks)}</b> on testnet (~50 s/block).{" "}
+                </>
+              )}
+              Current block {blockHeight?.toLocaleString() ?? "…"} → deadline{" "}
               {blockHeight ? (blockHeight + windowBlocks).toLocaleString() : "…"}.
             </div>
           </div>
 
           <div className="summary-line">
-            You lock <b>◈ {usd(escrow)}</b> now. If they deliver, they&apos;re paid{" "}
-            <b>◈ {usd(jobValueMicro)}</b> — the extra 2% rewards whoever backed them, or returns
-            to you. If they ghost, everything returns to you.
+            You escrow <b>◈ {usd(escrow)}</b>: the job&apos;s <b>◈ {usd(jobValueMicro)}</b> plus
+            a <b>◈ {usd(escrow - jobValueMicro)}</b> reward pool (2%) for whoever stakes their
+            own money on this worker. Deliver → the worker is paid{" "}
+            <b>◈ {usd(jobValueMicro)}</b> and the 2% pays their backer — it{" "}
+            <b>returns to you</b> if nobody backs them. Ghost → your full escrow returns,{" "}
+            <b>plus the backer&apos;s slashed stake</b>.
           </div>
 
           {error && <div className="notice blocked">{error}</div>}

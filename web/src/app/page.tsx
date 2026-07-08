@@ -8,12 +8,60 @@
 // the Binding in the duo section, the Restitution in the band's central card.
 // A connected wallet belongs on the board — the landing redirects it there.
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
 import LiveInstrument from "@/components/LiveInstrument";
 import { useWallet } from "@/hooks/useWallet";
+
+const SPLIT_PROOF_URL =
+  "https://explorer.hiro.so/txid/0x695af90092644672be11794f0cda9fa3040f18cc165917361e0190335d9e73c7?chain=testnet";
+
+/* Brass figures count up when they enter the viewport (reduced-motion: static). */
+function CountUp({
+  to,
+  decimals = 0,
+  suffix = "",
+}: {
+  to: number;
+  decimals?: number;
+  suffix?: string;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const done = () => (el.textContent = to.toFixed(decimals) + suffix);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      done();
+      return;
+    }
+    let raf = 0;
+    const obs = new IntersectionObserver(
+      (es) => {
+        if (!es.some((e) => e.isIntersecting)) return;
+        obs.disconnect();
+        const t0 = performance.now();
+        const dur = 1300;
+        const tick = (t: number) => {
+          const p = Math.min(1, (t - t0) / dur);
+          const eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = (to * eased).toFixed(decimals) + suffix;
+          if (p < 1) raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+      },
+      { threshold: 0.4 }
+    );
+    obs.observe(el);
+    return () => {
+      obs.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [to, decimals, suffix]);
+  return <span ref={ref}>{(0).toFixed(decimals) + suffix}</span>;
+}
 
 /* Static preview: the term improvement, visible (backed unlocks earlier). */
 function TermsPreview() {
@@ -71,14 +119,33 @@ export default function Landing() {
       <div className="wrap">
         <Nav />
 
-        {/* HERO — centered, pill badge above, CTA row below */}
+        {/* HERO — centered, pill badge above, CTA row below, instrument backdrop */}
         <header className="hero-c">
+          {/* backdrop: ledger rules + a wax seal that presses in (aria-hidden) */}
+          <div className="hero-bg" aria-hidden="true">
+            <div className="hero-seal">
+              <span>sealed</span>
+            </div>
+            <svg className="hero-ring" viewBox="0 0 400 400">
+              <circle cx="200" cy="200" r="196" />
+              <circle cx="200" cy="200" r="168" />
+              <circle cx="200" cy="200" r="120" />
+            </svg>
+          </div>
+
           <span className="pill">
             Reputation-staking · built on <b>FlowVault</b> · Stacks testnet
           </span>
           <h1>
             Stake on the people you <em>trust</em>.
           </h1>
+          {/* the signature — draws itself in like a pen stroke */}
+          <svg className="sig" viewBox="0 0 300 30" aria-hidden="true">
+            <path
+              pathLength={1}
+              d="M4,22 C40,4 66,26 104,14 C138,4 148,24 186,16 C224,8 240,22 296,8"
+            />
+          </svg>
           <p className="lede">
             A newcomer with no track record gets slow, cautious payouts. Someone who
             believes in them locks a real, Bitcoin-secured stake to speed it up — and if
@@ -90,6 +157,21 @@ export default function Landing() {
             </Link>
             <a href="#how" className="btn btn-ghost">
               See how it works
+            </a>
+          </div>
+          {/* proof strip — real numbers from the chain, counting up */}
+          <div className="proof-strip">
+            <span>
+              ◈ <b><CountUp to={12.2} decimals={1} /></b> already slashed &amp; repaid to a
+              wronged client
+            </span>
+            <span className="sep">·</span>
+            <span>
+              <b><CountUp to={100} suffix="%" /></b> chain-decided
+            </span>
+            <span className="sep">·</span>
+            <a href={SPLIT_PROOF_URL} target="_blank" rel="noreferrer">
+              see the split on the explorer ↗
             </a>
           </div>
         </header>
@@ -218,12 +300,12 @@ export default function Landing() {
           <div className="band-grid">
             <div className="band-col">
               <div className="stat">
-                <div className="fig">20%</div>
+                <div className="fig"><CountUp to={20} suffix="%" /></div>
                 <div className="k">Minimum stake</div>
                 <p>of the job&apos;s value, locked in the vault — enforced by the contract.</p>
               </div>
               <div className="stat">
-                <div className="fig">2%</div>
+                <div className="fig"><CountUp to={2} suffix="%" /></div>
                 <div className="k">Backer reward</div>
                 <p>
                   on clean delivery. Risking twenty to earn two — no one stakes on a person they
@@ -255,7 +337,7 @@ export default function Landing() {
             </div>
             <div className="band-col">
               <div className="stat">
-                <div className="fig">100%</div>
+                <div className="fig"><CountUp to={100} suffix="%" /></div>
                 <div className="k">Chain-decided</div>
                 <p>the outcome is fixed by block height and lock state — nothing else.</p>
               </div>

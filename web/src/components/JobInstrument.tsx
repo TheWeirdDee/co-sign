@@ -21,6 +21,7 @@ import {
 import {
   coSign,
   confirmFunding,
+  COSIGN_PRINCIPAL,
   disburse,
   explorerTxUrl,
   getJob,
@@ -55,9 +56,7 @@ export const usd = (micro: bigint) =>
 async function fetchResolution(jobId: bigint): Promise<Resolution | null> {
   try {
     const { fetchCallReadOnlyFunction, Cl } = await import("@stacks/transactions");
-    const [addr, name] = (
-      process.env.NEXT_PUBLIC_COSIGN_CONTRACT || "ST31DYZV2SMJHDWQ39T8MWBW8N0AKDR0PVM43D6T2.cosign"
-    ).split(".");
+    const [addr, name] = COSIGN_PRINCIPAL.split(".");
     const r: any = await fetchCallReadOnlyFunction({
       contractAddress: addr,
       contractName: name,
@@ -119,9 +118,21 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
 
   useEffect(() => {
     refresh();
-    const t = setInterval(refresh, 15_000);
+    const t = setInterval(refresh, 30_000);
     return () => clearInterval(t);
   }, [refresh]);
+
+  const [copied, setCopied] = useState(false);
+  const shareJob = async () => {
+    const url = `${window.location.origin}/job/${jobId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copy this job's link:", url);
+    }
+  };
 
   const act = (label: string, fn: () => Promise<unknown>) => async () => {
     if (!address) return void connect();
@@ -264,9 +275,14 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
       <div className="stage">
         <div className="stage-head">
           <span className="stage-title">Live instrument · job #{String(jobId)}</span>
-          <span className="blockclock">
-            block <b>{w ? w.height.toLocaleString() : "…"}</b> /{" "}
-            {job ? job.deadlineBlock.toLocaleString() : "…"}
+          <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <span className="blockclock">
+              block <b>{w ? w.height.toLocaleString() : "…"}</b> /{" "}
+              {job ? job.deadlineBlock.toLocaleString() : "…"}
+            </span>
+            <button className="share" onClick={shareJob} title="Copy a shareable link to this job">
+              {copied ? "copied ✓" : "share"}
+            </button>
           </span>
         </div>
         <div className="stage-body">

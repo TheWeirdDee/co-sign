@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Nav from "@/components/Nav";
 import JobInstrument from "@/components/JobInstrument";
-import DraftJobModal from "@/components/DraftJobModal";
+import DraftJobModal, { humanWindow } from "@/components/DraftJobModal";
 import { short, useWallet } from "@/hooks/useWallet";
 import { flowVaultRead, READ_CONTEXT_ADDRESS } from "@/lib/flowvault";
 import { listJobs, type BoardJob } from "@/lib/cosign";
@@ -84,7 +84,7 @@ function JobCard({ job, height, onOpen }: { job: BoardJob; height: number | null
               {left !== null && (
                 <>
                   {" "}
-                  · <b>{left.toLocaleString()}</b> blocks left
+                  · <b>{left.toLocaleString()}</b> blocks (≈ {humanWindow(left)}) left
                 </>
               )}
             </>
@@ -127,7 +127,8 @@ export default function Board() {
 
   useEffect(() => {
     refresh();
-    const t = setInterval(refresh, 20_000);
+    // 60s: the Hiro free tier rate-limits aggressive polling (surfaces as CORS)
+    const t = setInterval(refresh, 60_000);
     return () => clearInterval(t);
   }, [refresh]);
 

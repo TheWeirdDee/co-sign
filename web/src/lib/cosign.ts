@@ -9,9 +9,11 @@ import { NETWORK, TOKEN_PRINCIPAL } from "./flowvault";
 // Coordinator contract calls — wallet mode only (the connected browser wallet
 // signs every write; no sender keys in the frontend).
 
+// The env key is versioned (…_V2) deliberately: a stale NEXT_PUBLIC_COSIGN_CONTRACT
+// left in a deployment dashboard must NOT silently point the app at the old contract.
 const COSIGN_FALLBACK = "ST31DYZV2SMJHDWQ39T8MWBW8N0AKDR0PVM43D6T2.cosign-v2";
 export const COSIGN_PRINCIPAL =
-  process.env.NEXT_PUBLIC_COSIGN_CONTRACT || COSIGN_FALLBACK;
+  process.env.NEXT_PUBLIC_COSIGN_CONTRACT_V2 || COSIGN_FALLBACK;
 const [cosignAddress, cosignName] = COSIGN_PRINCIPAL.split(".");
 const [tokenAddress, tokenName] = TOKEN_PRINCIPAL.split(".");
 const tokenCV = () => Cl.contractPrincipal(tokenAddress, tokenName);
@@ -130,18 +132,36 @@ export interface BoardJob extends Job {
   id: bigint;
 }
 
-/** Newest-first list of jobs for the board. */
+// Resolved-and-disbursed jobs are immutable on-chain — cache them for the
+// session so the board's poll never re-reads them. Hiro's free-tier rate
+// limits are tight; a burst of parallel get-job calls surfaces as CORS errors.
+const settledCache = new Map<string, BoardJob>();
+
+/** Newest-first list of jobs for the board (chunked + cached, rate-limit safe). */
 export async function listJobs(limit = 30): Promise<BoardJob[]> {
   const n = await getJobCount();
   const ids: bigint[] = [];
   for (let id = n; id >= 1n && ids.length < limit; id--) ids.push(id);
-  const jobs = await Promise.all(
-    ids.map(async (id) => {
-      const j = await getJob(id);
-      return j ? { ...j, id } : null;
-    })
-  );
-  return jobs.filter((j): j is BoardJob => j !== null);
+  const out: BoardJob[] = [];
+  const CHUNK = 4;
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const jobs = await Promise.all(
+      ids.slice(i, i + CHUNK).map(async (id) => {
+        const hit = settledCache.get(String(id));
+        if (hit) return hit;
+        const j = await getJob(id);
+        if (!j) return null;
+        const bj = { ...j, id };
+        if ((j.status === "settled" || j.status === "ghosted") && j.disbursed) {
+          settledCache.set(String(id), bj);
+        }
+        return bj;
+      })
+    );
+    for (const j of jobs) if (j) out.push(j);
+    if (i + CHUNK < ids.length) await new Promise((r) => setTimeout(r, 400));
+  }
+  return out;
 }
 
 export async function getStanding(who: string): Promise<bigint> {

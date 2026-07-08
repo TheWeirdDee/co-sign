@@ -56,9 +56,14 @@ export default function Landing() {
   const { address } = useWallet();
   const router = useRouter();
 
-  // once connected, the user belongs on the board — no dead-end on the landing
+  // A connected wallet's first arrival goes to the board (no dead-end), but
+  // only once per session — navigating back to the landing deliberately
+  // (wordmark, footer) must actually show the landing, not bounce forever.
   useEffect(() => {
-    if (address) router.replace("/board");
+    if (!address) return;
+    if (sessionStorage.getItem("cs-seen-landing")) return;
+    sessionStorage.setItem("cs-seen-landing", "1");
+    router.replace("/board");
   }, [address, router]);
 
   return (

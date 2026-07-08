@@ -19,7 +19,7 @@ const USDCX = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usdcx";
 const SPLIT_PROOF =
   "https://explorer.hiro.so/txid/0x695af90092644672be11794f0cda9fa3040f18cc165917361e0190335d9e73c7?chain=testnet";
 
-const GROUPS = [
+const GROUPS: { label: string; items: [string, string][] }[] = [
   {
     label: "Overview",
     items: [
@@ -45,7 +45,7 @@ const GROUPS = [
       ["troubleshooting", "Troubleshooting"],
     ],
   },
-] as const;
+];
 
 export default function Docs() {
   return (

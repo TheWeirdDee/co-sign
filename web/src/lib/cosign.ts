@@ -24,6 +24,18 @@ export function explorerTxUrl(txid: string): string {
   return `https://explorer.hiro.so/txid/${id}?chain=${chain}`;
 }
 
+const chain = () => (NETWORK === "mainnet" ? "mainnet" : "testnet");
+
+/** Explorer page for any principal (wallet address). */
+export function explorerAddressUrl(principal: string): string {
+  return `https://explorer.hiro.so/address/${principal}?chain=${chain()}`;
+}
+
+/** Explorer page for the coordinator contract — every job tx is listed there. */
+export function explorerContractUrl(): string {
+  return `https://explorer.hiro.so/txid/${COSIGN_PRINCIPAL}?chain=${chain()}`;
+}
+
 async function walletCall(functionName: string, functionArgs: ClarityValue[]) {
   const res = await request("stx_callContract", {
     contract: COSIGN_PRINCIPAL as `${string}.${string}`,

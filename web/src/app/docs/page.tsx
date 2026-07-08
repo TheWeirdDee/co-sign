@@ -19,17 +19,32 @@ const USDCX = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usdcx";
 const SPLIT_PROOF =
   "https://explorer.hiro.so/txid/0x695af90092644672be11794f0cda9fa3040f18cc165917361e0190335d9e73c7?chain=testnet";
 
-const TOC = [
-  ["what", "1. What is Co-Sign?"],
-  ["flowvault", "2. What is FlowVault?"],
-  ["trust", "3. The trust model"],
-  ["setup", "4. One-time setup (10 min)"],
-  ["walkthrough", "5. Full walkthrough"],
-  ["flows", "6. The four flows"],
-  ["numbers", "7. Understanding the numbers"],
-  ["developers", "8. For developers"],
-  ["reference", "9. Contract reference"],
-  ["troubleshooting", "10. Troubleshooting"],
+const GROUPS = [
+  {
+    label: "Overview",
+    items: [
+      ["what", "What is Co-Sign?"],
+      ["flowvault", "What is FlowVault?"],
+      ["trust", "The trust model"],
+    ],
+  },
+  {
+    label: "Guide",
+    items: [
+      ["setup", "One-time setup"],
+      ["walkthrough", "Full walkthrough"],
+      ["flows", "The four flows"],
+      ["numbers", "Understanding the numbers"],
+    ],
+  },
+  {
+    label: "Protocol",
+    items: [
+      ["developers", "For developers"],
+      ["reference", "Contract reference"],
+      ["troubleshooting", "Troubleshooting"],
+    ],
+  },
 ] as const;
 
 export default function Docs() {
@@ -39,16 +54,21 @@ export default function Docs() {
         <Nav />
 
         <div className="docs">
-          <aside className="doc-toc" aria-label="On this page">
-            <div className="k">On this page</div>
-            {TOC.map(([id, label]) => (
-              <a key={id} href={`#${id}`}>
-                {label}
-              </a>
+          <aside className="doc-side" aria-label="Documentation sections">
+            {GROUPS.map((g) => (
+              <div key={g.label}>
+                <h6>{g.label}</h6>
+                {g.items.map(([id, label]) => (
+                  <a key={id} href={`#${id}`}>
+                    {label}
+                  </a>
+                ))}
+              </div>
             ))}
           </aside>
 
           <div className="doc-body">
+            <div className="doc-eyebrow">Documentation</div>
             <h1>Co-Sign, from zero.</h1>
             <p className="lede" style={{ maxWidth: "62ch" }}>
               Never touched Stacks, a crypto wallet, or a smart contract? Perfect. This page
@@ -618,6 +638,15 @@ cd ../web && npm install && npm run dev`}</div>
               </div>
             </section>
           </div>
+
+          <aside className="doc-mini" aria-label="On this page">
+            <div className="k">☰ On this page</div>
+            {GROUPS.flatMap((g) => g.items).map(([id, label], i) => (
+              <a key={id} href={`#${id}`}>
+                {i + 1}. {label}
+              </a>
+            ))}
+          </aside>
         </div>
 
         <footer>

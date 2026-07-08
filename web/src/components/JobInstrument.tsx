@@ -23,6 +23,8 @@ import {
   confirmFunding,
   COSIGN_PRINCIPAL,
   disburse,
+  explorerAddressUrl,
+  explorerContractUrl,
   explorerTxUrl,
   getJob,
   jobRef,
@@ -294,7 +296,18 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
             <div className={`card${job?.backer ? " active" : ""}`}>
               <div className="card-role">Backer {job?.backer ? "· staked" : "· open seat"}</div>
               <div className="card-addr">
-                {job?.backer ? short(job.backer) : "— no co-signer yet —"}
+                {job?.backer ? (
+                  <a
+                    href={explorerAddressUrl(job.backer)}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="View this address on the explorer"
+                  >
+                    {short(job.backer)} ↗
+                  </a>
+                ) : (
+                  "— no co-signer yet —"
+                )}
               </div>
               <div className="card-fig">
                 <span className="g">◈</span>
@@ -321,7 +334,20 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
                       ? "· cycle live"
                       : "· no history"}
               </div>
-              <div className="card-addr">{job ? short(job.newcomer) : "…"}</div>
+              <div className="card-addr">
+                {job ? (
+                  <a
+                    href={explorerAddressUrl(job.newcomer)}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="View this address on the explorer"
+                  >
+                    {short(job.newcomer)} ↗
+                  </a>
+                ) : (
+                  "…"
+                )}
+              </div>
               <div className="card-terms">
                 payout unlocks:{" "}
                 <span className="t">
@@ -379,14 +405,23 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
           {/* the three FlowVault reads — the witnesses, live */}
           <div className="reads">
             <span className="read">
-              getCurrentBlockHeight <b>{w ? w.height.toLocaleString() : "…"}</b>
+              get-current-block-height <b>{w ? w.height.toLocaleString() : "…"}</b>
             </span>
             <span className="read">
-              lockUntilBlock <b>{w ? w.lockUntil.toLocaleString() : "…"}</b>
+              lock-until-block <b>{w ? w.lockUntil.toLocaleString() : "…"}</b>
             </span>
             <span className="read">
-              hasLockedFunds <b>{w ? String(w.hasLocked) : "…"}</b>
+              has-locked-funds <b>{w ? String(w.hasLocked) : "…"}</b>
             </span>
+            <a
+              className="read"
+              href={explorerContractUrl()}
+              target="_blank"
+              rel="noreferrer"
+              title="Every transaction of this job, on the coordinator contract's explorer page"
+            >
+              verify on-chain ↗
+            </a>
           </div>
         </div>
       </div>

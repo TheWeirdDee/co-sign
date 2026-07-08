@@ -401,8 +401,11 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* FOOTER PANEL — close + footer merged (reference layout, Co-Sign theme) */}
-        <footer className="foot-panel">
+      </div>
+
+      {/* FOOTER PANEL — full-bleed: close + footer merged (reference layout) */}
+      <footer className="foot-panel">
+        <div className="wrap">
           <div className="foot-top">
             <div className="foot-left">
               <div className="foot-brand">
@@ -478,8 +481,8 @@ export default function Landing() {
               </a>
             </span>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </main>
   );
 }

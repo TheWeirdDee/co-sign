@@ -81,6 +81,7 @@ export interface Job {
   stakeAmount: bigint;
   escrowAmount: bigint;
   deadlineBlock: number;
+  backedBlock: number;
   status: string;
   funded: boolean;
   disbursed: boolean;
@@ -98,6 +99,7 @@ export async function getJob(jobId: bigint): Promise<Job | null> {
     stakeAmount: BigInt(t["stake-amount"].value),
     escrowAmount: BigInt(t["escrow-amount"].value),
     deadlineBlock: Number(t["deadline-block"].value),
+    backedBlock: Number(t["backed-block"].value),
     status: t["status"].value,
     funded: t["funded"].type === "true",
     disbursed: t["disbursed"].type === "true",
@@ -122,6 +124,24 @@ export async function readTerms(jobId: bigint): Promise<Terms> {
 export async function getJobCount(): Promise<bigint> {
   const res: any = await readOnly("get-job-count", []);
   return BigInt(res.value);
+}
+
+export interface BoardJob extends Job {
+  id: bigint;
+}
+
+/** Newest-first list of jobs for the board. */
+export async function listJobs(limit = 30): Promise<BoardJob[]> {
+  const n = await getJobCount();
+  const ids: bigint[] = [];
+  for (let id = n; id >= 1n && ids.length < limit; id--) ids.push(id);
+  const jobs = await Promise.all(
+    ids.map(async (id) => {
+      const j = await getJob(id);
+      return j ? { ...j, id } : null;
+    })
+  );
+  return jobs.filter((j): j is BoardJob => j !== null);
 }
 
 export async function getStanding(who: string): Promise<bigint> {

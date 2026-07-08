@@ -25,6 +25,7 @@ import {
   disburse,
   explorerTxUrl,
   getJob,
+  jobRef,
   readTerms,
   resolve,
   stakeFloor,
@@ -177,7 +178,8 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
         </div>
         <div className="stage-body">
           <p style={{ color: "var(--bone-dim)", fontSize: 14 }}>
-            Job #{String(jobId)} does not exist on the coordinator contract.
+            This instrument does not exist on the coordinator contract (no job #
+            {String(jobId)} on-chain).
           </p>
         </div>
       </div>
@@ -274,7 +276,9 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
     <>
       <div className="stage">
         <div className="stage-head">
-          <span className="stage-title">Live instrument · job #{String(jobId)}</span>
+          <span className="stage-title" title={`job #${String(jobId)} on-chain`}>
+            Live instrument · {jobRef(jobId)}
+          </span>
           <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <span className="blockclock">
               block <b>{w ? w.height.toLocaleString() : "…"}</b> /{" "}

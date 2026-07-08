@@ -14,7 +14,7 @@ import JobInstrument from "@/components/JobInstrument";
 import DraftJobModal, { humanWindow } from "@/components/DraftJobModal";
 import { short, useWallet } from "@/hooks/useWallet";
 import { flowVaultRead, READ_CONTEXT_ADDRESS } from "@/lib/flowvault";
-import { listJobs, type BoardJob } from "@/lib/cosign";
+import { jobRef, listJobs, type BoardJob } from "@/lib/cosign";
 
 // board filters — client-side presentation over the jobs already read
 const STATE_FILTERS = ["all", "open", "running", "settled", "ghosted"] as const;
@@ -49,7 +49,9 @@ function JobCard({ job, height, onOpen }: { job: BoardJob; height: number | null
   return (
     <button className="jobcard" onClick={onOpen}>
       <div className="jobcard-head">
-        <span className="jobcard-id">Job #{String(job.id)}</span>
+        <span className="jobcard-id" title={`job #${String(job.id)} on-chain`}>
+          {jobRef(job.id)}
+        </span>
         <span className={`state ${s.cls}`}>{s.chip}</span>
       </div>
       <div className="jobcard-body">

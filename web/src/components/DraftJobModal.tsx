@@ -14,7 +14,7 @@ import {
   parseTokenAmount,
   READ_CONTEXT_ADDRESS,
 } from "@/lib/flowvault";
-import { createJob, explorerTxUrl, listJobs, requiredEscrow } from "@/lib/cosign";
+import { createJob, explorerTxUrl, jobRef, listJobs, requiredEscrow } from "@/lib/cosign";
 
 const MIN_WINDOW = 30;
 
@@ -101,7 +101,7 @@ export default function DraftJobModal({
       if (live) {
         setBusy(null);
         return setError(
-          `This worker already has a live instrument (job #${live.id}). One at a time — settle it first.`
+          `This worker already has a live instrument (${jobRef(live.id)}). One at a time — settle it first.`
         );
       }
       setBusy("awaiting wallet signature…");

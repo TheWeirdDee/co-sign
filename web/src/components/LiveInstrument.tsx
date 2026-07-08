@@ -167,7 +167,7 @@ export default function LiveInstrument() {
   return (
     <div className="stage" ref={stage}>
       <div className="stage-head">
-        <span className="stage-title">Live instrument · job #4417</span>
+        <span className="stage-title">Live instrument · CS-4417-DEMO</span>
         <span className="blockclock">
           block <b ref={clock}>3,904,780</b> / 3,905,000
         </span>

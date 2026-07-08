@@ -169,6 +169,25 @@ export async function getStanding(who: string): Promise<bigint> {
   return BigInt(res.value["clean-completions"].value);
 }
 
+// Instrument reference: a deed-style serial derived deterministically from the
+// contract principal + on-chain job id (FNV-1a → unambiguous letters). Purely
+// presentational — the uint id stays canonical and auditable on the explorer.
+const REF_ALPHABET = "ABCDEFGHJKMNPQRSTVWXYZ";
+export function jobRef(id: bigint): string {
+  const s = `${COSIGN_PRINCIPAL}#${id}`;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  let tag = "";
+  for (let i = 0; i < 4; i++) {
+    tag += REF_ALPHABET[h % REF_ALPHABET.length];
+    h = Math.floor(h / REF_ALPHABET.length);
+  }
+  return `CS-${String(id).padStart(4, "0")}-${tag}`;
+}
+
 export function requiredEscrow(jobValueMicro: bigint): bigint {
   return (jobValueMicro * 102n) / 100n;
 }

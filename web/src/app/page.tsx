@@ -401,16 +401,83 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="close">
-          <p>Put your money where your trust is.</p>
-          <Link href="/board" className="btn btn-primary">
-            Open the board
-          </Link>
-        </section>
+        {/* FOOTER PANEL — close + footer merged (reference layout, Co-Sign theme) */}
+        <footer className="foot-panel">
+          <div className="foot-top">
+            <div className="foot-left">
+              <div className="foot-brand">
+                CO<span className="dot">·</span>SIGN
+              </div>
+              <h2>Put your money where your trust is.</h2>
+              <div className="cta-row" style={{ marginTop: 0 }}>
+                <Link href="/board" className="btn btn-primary">
+                  Open the board
+                </Link>
+                <Link href="/docs" className="btn btn-ghost">
+                  Read the docs
+                </Link>
+              </div>
+            </div>
+            <div className="foot-cols">
+              <div>
+                <h5>The app</h5>
+                <Link href="/board">The board</Link>
+                <Link href="/docs">Documentation</Link>
+                <a href="#who">Who signs it</a>
+                <a href="#how">How a job runs</a>
+              </div>
+              <div>
+                <h5>Proof</h5>
+                <a
+                  href="https://explorer.hiro.so/txid/ST31DYZV2SMJHDWQ39T8MWBW8N0AKDR0PVM43D6T2.cosign-v2?chain=testnet"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  The contract ↗
+                </a>
+                <a href={SPLIT_PROOF_URL} target="_blank" rel="noreferrer">
+                  A real slash, split on-chain ↗
+                </a>
+                <a
+                  href="https://github.com/TheWeirdDee/co-sign"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Source on GitHub ↗
+                </a>
+              </div>
+            </div>
+          </div>
 
-        <footer>
-          <div className="foot-mark">CO·SIGN</div>
-          <div className="foot-note">Stacks testnet · FlowVault Builder Bounty</div>
+          <div className="foot-badges">
+            <span className="lead">Nothing to trust — verify it:</span>
+            <span className="badge">
+              <span className="i">⊘</span> no server key
+            </span>
+            <span className="badge">
+              <span className="i">⊘</span> no database
+            </span>
+            <span className="badge">
+              <span className="i">⊘</span> no judge
+            </span>
+          </div>
+
+          <div className="foot-bottom">
+            <span>Stacks testnet · FlowVault Builder Bounty</span>
+            <span>© 2026 Co-Sign</span>
+            <span className="links">
+              <a href="https://github.com/TheWeirdDee/co-sign" target="_blank" rel="noreferrer">
+                GitHub
+              </a>
+              <a
+                href="https://explorer.hiro.so/?chain=testnet"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Explorer
+              </a>
+            </span>
+          </div>
         </footer>
       </div>
     </main>

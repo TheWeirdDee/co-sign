@@ -172,6 +172,16 @@ export default function Docs() {
                   risk. That is how underwriting works.
                 </li>
               </ul>
+              <h3>Can one wallet play two roles on the same job?</h3>
+              <p>
+                No — the contract rejects it (<code>ERR-SELF-PARTY</code>):{" "}
+                <code>create-job</code> refuses a client naming themselves as the worker, and{" "}
+                <code>co-sign</code> refuses a backer who is the job&apos;s worker <i>or</i>{" "}
+                its client. One person with several wallets can&apos;t be detected by any
+                chain, but the economics neutralize it: self-backing means locking 20% of
+                your own money to win 2% of your own money — and if you ghost, you slash
+                yourself to pay the client.
+              </p>
               <div className="doc-note">
                 <b>The keeper is a clock, not a decider.</b> Stacks contracts don&apos;t
                 self-execute on a timer, so a small watcher submits <code>resolve</code> when

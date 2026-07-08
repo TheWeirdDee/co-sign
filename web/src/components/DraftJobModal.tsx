@@ -140,7 +140,11 @@ export default function DraftJobModal({
         </div>
         <div className="modal-sheet">
           <h3>Open a job.</h3>
-          <p className="sub">Three things: who does the work, what it pays, and by when.</p>
+          <p className="sub">
+            <b style={{ color: "var(--bone)" }}>You are the client here</b> — the one hiring
+            and escrowing the pay. The backer and the worker act later, on the job&apos;s
+            card. Three things: who does the work, what it pays, and by when.
+          </p>
 
           <div className="field">
             <label htmlFor="worker">The worker · STX address</label>
@@ -172,10 +176,10 @@ export default function DraftJobModal({
           </div>
 
           <div className="summary-line">
-            You escrow <b>◈ {usd(escrow)}</b>: the job&apos;s <b>◈ {usd(jobValueMicro)}</b> plus
-            a <b>◈ {usd(escrow - jobValueMicro)}</b> reward pool (2%) for whoever stakes their
-            own money on this worker. Deliver → the worker is paid{" "}
-            <b>◈ {usd(jobValueMicro)}</b> and the 2% pays their backer — it{" "}
+            You escrow <b>{usd(escrow)} USDCx</b>: the job&apos;s <b>{usd(jobValueMicro)}</b>{" "}
+            plus a <b>{usd(escrow - jobValueMicro)}</b> reward pool (2%) for whoever stakes
+            their own money on this worker. Deliver → the worker is paid{" "}
+            <b>{usd(jobValueMicro)}</b> and the 2% pays their backer — it{" "}
             <b>returns to you</b> if nobody backs them. Ghost → your full escrow returns,{" "}
             <b>plus the backer&apos;s slashed stake</b>.
           </div>

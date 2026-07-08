@@ -13,7 +13,9 @@
   --body:var(--font-hanken),system-ui,sans-serif;
   --mono:var(--font-plex-mono),ui-monospace,monospace;
 }
-.cs-page{background:var(--ink);color:var(--bone);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;width:100%}
+/* overflow-x:clip (not hidden): hidden creates a scroll container and silently
+   kills position:sticky everywhere inside — clip clips without doing that */
+.cs-page{background:var(--ink);color:var(--bone);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:clip;min-height:100vh;width:100%}
 .cs-page *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 .wrap{max-width:1160px;margin:0 auto;padding:0 32px}
@@ -390,8 +392,10 @@ a.read:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
 /* ===== footer panel (reference layout: brand + tagline left, link columns
    right, badge strip, small-print bottom row — all inside one raised panel) */
-/* full-bleed: the panel spans the viewport; the inner .wrap aligns content */
+/* full-bleed: the panel spans the viewport; the inner .wrap aligns content to
+   exactly the same column as the rest of the page */
 .foot-panel{background:var(--ink-raised);border-top:1px solid var(--hairline);padding:60px 0 26px;margin-top:96px}
+.foot-panel>.wrap{max-width:1160px;margin:0 auto;padding:0 32px}
 .foot-top{display:grid;grid-template-columns:1.25fr 1fr;gap:56px;align-items:start}
 .foot-brand{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:.28em;color:var(--bone);margin-bottom:22px}
 .foot-brand .dot{color:var(--seal-lit)}

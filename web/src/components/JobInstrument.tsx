@@ -137,6 +137,24 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
     }
   };
 
+  // Wait for a broadcast tx to actually confirm, so the instrument updates
+  // itself instead of asking the user to refresh.
+  const awaitTx = async (txid: string) => {
+    for (let i = 0; i < 60; i++) {
+      try {
+        const j = await (
+          await fetch(`https://api.testnet.hiro.so/extended/v1/tx/0x${txid}`)
+        ).json();
+        if (j.tx_status === "success") return;
+        if (String(j.tx_status).startsWith("abort"))
+          throw new Error(`transaction rejected: ${j.tx_result?.repr ?? j.tx_status}`);
+      } catch (e) {
+        if (String((e as Error).message).startsWith("transaction rejected")) throw e;
+      }
+      await new Promise((r) => setTimeout(r, 10_000));
+    }
+  };
+
   const act = (label: string, fn: () => Promise<unknown>) => async () => {
     if (!address) return void connect();
     setBusy(label);
@@ -144,6 +162,10 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
       const res: any = await fn();
       const txid = (res?.txid ?? res?.txId ?? "").replace(/^0x/, "");
       push({ label, txid: txid || undefined });
+      if (txid) {
+        setBusy("confirming on-chain…");
+        await awaitTx(txid);
+      }
     } catch (e) {
       push({ label, err: friendlyError(e) });
     } finally {
@@ -227,13 +249,14 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
       return (
         <>
           Deadline passed with no completed cycle. The{" "}
-          <span className="oops">◈{usd(job.stakeAmount)} stake</span> and the escrow route{" "}
-          <span className="oops">to the client</span> — restitution,{" "}
+          <span className="oops">{usd(job.stakeAmount)} USDCx stake</span> and the escrow
+          route <span className="oops">to the client</span> — restitution,{" "}
           {job.disbursed ? "paid" : "releasing"}.
           {resolution && (
             <>
               {" "}
-              Client receives <span className="oops">◈{usd(resolution.clientAmount)}</span>.
+              Client receives{" "}
+              <span className="oops">{usd(resolution.clientAmount)} USDCx</span>.
             </>
           )}
         </>
@@ -242,10 +265,10 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
       return (
         <>
           Cycle complete. Newcomer paid{" "}
-          <span className="m">◈{usd(resolution?.newcomerAmount ?? job.jobValue)}</span>
+          <span className="m">{usd(resolution?.newcomerAmount ?? job.jobValue)} USDCx</span>
           {job.backer && (
             <>
-              ; stake returned to backer <span className="m">+ ◈{usd(reward)} reward</span>
+              ; stake returned to backer <span className="m">+ {usd(reward)} reward</span>
             </>
           )}
           . {job.disbursed ? "Both gain standing." : "Payout releasing (shared vault lock)…"}
@@ -259,7 +282,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
         </>
       ) : (
         <>
-          Backer stakes <span className="m">◈{usd(job.stakeAmount)} USDCx</span> on this
+          Backer stakes <span className="m">{usd(job.stakeAmount)} USDCx</span> on this
           newcomer.
           {job.funded && (
             <>
@@ -426,14 +449,36 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
         </div>
       </div>
 
+      {/* how the outcome is decided — the completion oracle, in plain words */}
+      {active && job && (
+        <div className="notice" style={{ marginTop: 14 }}>
+          <b>How the outcome is decided:</b> &quot;delivered&quot; means the worker locked{" "}
+          <b>{usd(job.jobValue)} USDCx</b> in their own FlowVault vault through this
+          job&apos;s window — the <b>deposit &amp; lock</b> step below.{" "}
+          {job.funded ? (
+            <>
+              That evidence is <b>recorded ✓</b> — at the deadline block this job settles
+              clean and everyone is paid.
+            </>
+          ) : (
+            <>
+              <b>No evidence yet</b> — if none exists by block{" "}
+              {job.deadlineBlock.toLocaleString()}, the job settles as ghosted and the
+              client is made whole{job.backer ? ", paid from the backer's stake" : ""}.
+            </>
+          )}{" "}
+          No one judges the work itself — the backer priced that risk with their own money.
+        </div>
+      )}
+
       {/* the backer's proposition — the ONLY place stake math appears */}
       {canCoSign && job && (
         <div className="backer-offer">
           <div className="k">Back this worker · the offer</div>
           <p>
-            The job pays <b>◈ {usd(job.jobValue)}</b>. Stake at least{" "}
-            <b>◈ {usd(stakeFloor(job.jobValue))}</b> (20%) on them delivering. If they deliver,
-            your stake returns <b>+ ◈ {usd(reward)}</b> (2%). If they ghost, your stake pays
+            The job pays <b>{usd(job.jobValue)} USDCx</b>. Stake at least{" "}
+            <b>{usd(stakeFloor(job.jobValue))}</b> (20%) on them delivering. If they deliver,
+            your stake returns <b>+ {usd(reward)}</b> (2%). If they ghost, your stake pays
             the client. Risking twenty to earn two — only sign if you believe.
           </p>
         </div>
@@ -459,7 +504,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
         )}
         {canDeposit && (
           <button className="btn btn-bone" onClick={doDeposit} disabled={!!busy}>
-            {busy === "deposit & lock" ? "Locking…" : "Deposit & lock (your terms above)"}
+            {busy === "deposit & lock" ? "Locking…" : "Prove delivery — deposit & lock"}
           </button>
         )}
         {active && deadlineReached && (

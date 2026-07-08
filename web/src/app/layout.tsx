@@ -25,9 +25,28 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Co-Sign — Stake on the people you trust",
+  metadataBase: new URL("https://co-sign-eight.vercel.app"),
+  title: {
+    default: "Co-Sign — Stake on the people you trust",
+    template: "%s · Co-Sign",
+  },
   description:
-    "Put your money where your trust is. A reputation-staking primitive on Stacks, built on FlowVault.",
+    "Put your money where your trust is. A reputation-staking primitive on Stacks, built on FlowVault: backers lock real capital on a newcomer's outcome — restitution built in, no judge anywhere.",
+  keywords: ["Stacks", "FlowVault", "reputation", "staking", "escrow", "Bitcoin", "USDCx"],
+  openGraph: {
+    title: "Co-Sign — Stake on the people you trust",
+    description:
+      "On-chain reputation is a scoreboard. Co-Sign makes it a market — trust as a real, staked position, enforced by FlowVault on Stacks.",
+    url: "https://co-sign-eight.vercel.app",
+    siteName: "Co-Sign",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Co-Sign — Stake on the people you trust",
+    description:
+      "Trust as a staked position on Stacks: back a newcomer with real capital, earn 2% when they deliver — or your stake pays the person they let down.",
+  },
 };
 
 export default function RootLayout({

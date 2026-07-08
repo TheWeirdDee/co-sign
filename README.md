@@ -153,6 +153,29 @@ housekeeping. Contract-side idempotency (`ERR-ALREADY-RESOLVED`, `ERR-ALREADY-DI
 `ERR-STILL-LOCKED`) means the keeper can be dumb and stateless: rejections are logged and
 cooled down, never retried hot.
 
+## Integrating Co-Sign (for other Stacks apps)
+
+Co-Sign is a primitive, not a destination. The contract has **no admin keys and no
+allowlist** — every function is permissionless, so integration is plain contract calls:
+
+- **Escrow + vouching for a marketplace or DAO.** Call
+  `create-job(worker, value, deadline-block, token)` from your app (or your treasury
+  contract) and expose `co-sign(job-id, stake, token)` to anyone who trusts the worker.
+  You inherit the whole machine — locked escrow, stake-improved payout terms, automatic
+  restitution on ghosting — without writing escrow code. You don't run a resolver
+  either: `resolve` and `disburse` are permissionless, so any keeper settles all jobs.
+- **Portable reputation, read-only.** `get-standing(principal)` returns clean
+  completions, and the evidence behind it is FlowVault's own vault history. Any app can
+  gate grants, sort candidates, or underwrite credit on "N clean cycles, backed by real
+  staked capital" — a signal that is expensive to fake by construction, because someone
+  had to lock money at 20%-to-earn-2% odds behind it.
+- **Composability surface:** `get-job`, `read-terms` (the exact FlowVault routing params
+  a worker should submit), `read-resolution` (per-party payout of a settled job), and
+  `read-escrow` (what a client must lock for a given job value). All read-only, no fees.
+
+Roadmap for integrators: a `cosign-trait` and a thin TypeScript wrapper package, so
+third-party contracts can accept any Co-Sign-compatible coordinator.
+
 ## Known limitations (documented and tested)
 
 Consequences of FlowVault's one-lock-per-vault design, stated plainly:

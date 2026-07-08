@@ -9,7 +9,7 @@ import { NETWORK, TOKEN_PRINCIPAL } from "./flowvault";
 // Coordinator contract calls — wallet mode only (the connected browser wallet
 // signs every write; no sender keys in the frontend).
 
-const COSIGN_FALLBACK = "ST31DYZV2SMJHDWQ39T8MWBW8N0AKDR0PVM43D6T2.cosign";
+const COSIGN_FALLBACK = "ST31DYZV2SMJHDWQ39T8MWBW8N0AKDR0PVM43D6T2.cosign-v2";
 export const COSIGN_PRINCIPAL =
   process.env.NEXT_PUBLIC_COSIGN_CONTRACT || COSIGN_FALLBACK;
 const [cosignAddress, cosignName] = COSIGN_PRINCIPAL.split(".");

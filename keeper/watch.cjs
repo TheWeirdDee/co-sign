@@ -44,7 +44,7 @@ const {
 } = require("@stacks/transactions");
 
 const API = process.env.STACKS_API ?? "https://api.testnet.hiro.so";
-const COSIGN = process.env.COSIGN_CONTRACT ?? "ST31DYZV2SMJHDWQ39T8MWBW8N0AKDR0PVM43D6T2.cosign";
+const COSIGN = process.env.COSIGN_CONTRACT ?? "ST31DYZV2SMJHDWQ39T8MWBW8N0AKDR0PVM43D6T2.cosign-v2";
 const [COSIGN_ADDR, COSIGN_NAME] = COSIGN.split(".");
 const FV_ADDR = "STD7QG84VQQ0C35SZM2EYTHZV4M8FQ0R7YNSQWPD";
 const FV_NAME = "flowvault-v2";

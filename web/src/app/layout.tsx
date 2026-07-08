@@ -25,7 +25,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Co-Sign — Stake Bitcoin on the people you trust",
+  title: "Co-Sign — Stake on the people you trust",
   description:
     "Put your money where your trust is. A reputation-staking primitive on Stacks, built on FlowVault.",
 };

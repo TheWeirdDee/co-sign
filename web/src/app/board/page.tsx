@@ -12,9 +12,19 @@ import { useCallback, useEffect, useState } from "react";
 import Nav from "@/components/Nav";
 import JobInstrument from "@/components/JobInstrument";
 import DraftJobModal from "@/components/DraftJobModal";
-import { short } from "@/hooks/useWallet";
+import { short, useWallet } from "@/hooks/useWallet";
 import { flowVaultRead, READ_CONTEXT_ADDRESS } from "@/lib/flowvault";
 import { listJobs, type BoardJob } from "@/lib/cosign";
+
+// board filters — client-side presentation over the jobs already read
+const STATE_FILTERS = ["all", "open", "running", "settled", "ghosted"] as const;
+type StateFilter = (typeof STATE_FILTERS)[number];
+
+const uiState = (j: BoardJob): StateFilter =>
+  j.status === "backed" ? "running" : (j.status as StateFilter);
+
+const involves = (j: BoardJob, addr: string) =>
+  j.client === addr || j.newcomer === addr || j.backer === addr;
 
 const usd = (m: bigint) => (Number(m) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 });
 
@@ -94,10 +104,13 @@ function JobCard({ job, height, onOpen }: { job: BoardJob; height: number | null
 }
 
 export default function Board() {
+  const { address } = useWallet();
   const [jobs, setJobs] = useState<BoardJob[] | null>(null);
   const [height, setHeight] = useState<number | null>(null);
   const [open, setOpen] = useState<bigint | null>(null);
   const [drafting, setDrafting] = useState(false);
+  const [stateFilter, setStateFilter] = useState<StateFilter>("all");
+  const [mineOnly, setMineOnly] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -127,6 +140,17 @@ export default function Board() {
   const running = jobs?.filter((j) => j.status === "backed").length ?? 0;
   const openCount = jobs?.filter((j) => j.status === "open").length ?? 0;
 
+  const visible = jobs?.filter(
+    (j) =>
+      (stateFilter === "all" || uiState(j) === stateFilter) &&
+      (!mineOnly || (address !== null && involves(j, address)))
+  );
+
+  const browseOpen = () => {
+    setStateFilter("open");
+    setMineOnly(false);
+  };
+
   return (
     <main className="cs-page flex-1">
       <div className="wrap">
@@ -152,15 +176,71 @@ export default function Board() {
           </div>
         </div>
 
+        {jobs !== null && jobs.length > 0 && (
+          <div className="filters">
+            <div className="fgroup" role="group" aria-label="Filter by state">
+              {STATE_FILTERS.map((f) => (
+                <button
+                  key={f}
+                  className={`fchip${stateFilter === f ? " on" : ""}`}
+                  onClick={() => setStateFilter(f)}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            {address && (
+              <div className="fgroup" role="group" aria-label="Filter by involvement">
+                <button
+                  className={`fchip${!mineOnly ? " on" : ""}`}
+                  onClick={() => setMineOnly(false)}
+                >
+                  all jobs
+                </button>
+                <button
+                  className={`fchip${mineOnly ? " on" : ""}`}
+                  onClick={() => setMineOnly(true)}
+                >
+                  mine
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="board">
           {jobs === null && <div className="board-empty">Reading the chain…</div>}
-          {jobs?.length === 0 && (
-            <div className="board-empty">
-              No instruments yet. Draft the first job — you escrow the pay, a backer co-signs,
-              the chain settles it.
+          {jobs !== null && visible?.length === 0 && (
+            <div className="ways-in">
+              <p>Co-Sign is where trust gets staked.</p>
+              <p className="sub">
+                {jobs.length === 0
+                  ? "No instruments on the board yet — two ways in:"
+                  : mineOnly
+                    ? "Nothing here involves your wallet yet — two ways in:"
+                    : "Nothing matches this filter — two ways in:"}
+              </p>
+              <div className="ways-grid">
+                <button className="way" onClick={() => setDrafting(true)}>
+                  <div className="w-k">You&apos;re hiring</div>
+                  <h4>Draft a job</h4>
+                  <p>
+                    Escrow the pay for someone you want to work with — the vault holds it until
+                    the deadline settles.
+                  </p>
+                </button>
+                <button className="way" onClick={browseOpen}>
+                  <div className="w-k">You trust someone</div>
+                  <h4>Browse open jobs</h4>
+                  <p>
+                    Find a job whose worker you believe in and co-sign it — stake on their
+                    outcome, earn 2% when they deliver.
+                  </p>
+                </button>
+              </div>
             </div>
           )}
-          {jobs?.map((j) => (
+          {visible?.map((j) => (
             <JobCard key={String(j.id)} job={j} height={height} onOpen={() => setOpen(j.id)} />
           ))}
         </div>

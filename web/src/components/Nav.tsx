@@ -20,11 +20,12 @@ export default function Nav() {
       <Link href="/" className="wordmark">
         CO<span className="dot">·</span>SIGN
       </Link>
+      <div className="nav-links">
+        <Link href="/board">The board</Link>
+        <Link href="/#who">Who signs</Link>
+        <Link href="/#how">How it works</Link>
+      </div>
       <div className="nav-right">
-        <div className="nav-links">
-          <Link href="/board">The board</Link>
-          <Link href="/#how">How it works</Link>
-        </div>
         <span className="tag">Stacks testnet</span>
         {address ? (
           <button className="connect linked" onClick={disconnect} title="Disconnect">

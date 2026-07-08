@@ -187,8 +187,20 @@
               )
             )
             ;; ghost: restitution -- the wronged client receives their escrow
-            ;; back PLUS the backer's slashed stake.
-            (try! (transfer-if-positive token total client))
+            ;; back PLUS the backer's slashed stake, routed through a genuine
+            ;; FlowVault SPLIT rule: the withdrawn funds are re-deposited with
+            ;; split-address = client, split-amount = total, so FlowVault's own
+            ;; routing engine executes the slash at deposit time (splits fire
+            ;; on deposit in flowvault-v2). Rules are cleared afterwards so no
+            ;; stale split survives the transaction.
+            (begin
+              (try! (as-contract (contract-call? 'STD7QG84VQQ0C35SZM2EYTHZV4M8FQ0R7YNSQWPD.flowvault-v2
+                                                 set-routing-rules u0 u0 (some client) total)))
+              (try! (as-contract (contract-call? 'STD7QG84VQQ0C35SZM2EYTHZV4M8FQ0R7YNSQWPD.flowvault-v2
+                                                 deposit token total)))
+              (unwrap-panic (as-contract (contract-call? 'STD7QG84VQQ0C35SZM2EYTHZV4M8FQ0R7YNSQWPD.flowvault-v2
+                                                         clear-routing-rules)))
+            )
           )
           (ok true)
         )

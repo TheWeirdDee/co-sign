@@ -22,8 +22,8 @@ export default function Nav() {
       </Link>
       <div className="nav-links">
         <Link href="/board">The board</Link>
-        <Link href="/#who">Who signs</Link>
         <Link href="/#how">How it works</Link>
+        <Link href="/docs">Docs</Link>
       </div>
       <div className="nav-right">
         <span className="tag">Stacks testnet</span>

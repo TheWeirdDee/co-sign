@@ -153,6 +153,25 @@ housekeeping. Contract-side idempotency (`ERR-ALREADY-RESOLVED`, `ERR-ALREADY-DI
 `ERR-STILL-LOCKED`) means the keeper can be dumb and stateless: rejections are logged and
 cooled down, never retried hot.
 
+## Try it in 5 minutes (no code)
+
+Full beginner guide: **https://co-sign-eight.vercel.app/docs** — every click explained.
+
+1. **Install a Stacks wallet** — [Xverse](https://www.xverse.app/) or
+   [Leather](https://leather.io/), create an account, switch it to **Testnet**. Your
+   address starts with `ST…`.
+2. **Get free testnet STX** (gas) from the
+   [Hiro faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet).
+3. **Get testnet USDCx** — use the FlowVault bounty's testnet USDCx dispenser, or ask in
+   the FlowVault Telegram.
+4. **Open the live app** — https://co-sign-eight.vercel.app → connect wallet → the board.
+5. **Draft a job** (you're the client): name a worker's `ST…` address, the pay, a
+   deadline (the form converts blocks to hours/days for you). You escrow pay + 2%.
+6. **Co-sign it** from a second account (you're the backer): stake ≥ 20% of the job on
+   the worker — watch their payout terms improve on the card, live.
+7. **Watch it settle**: at the deadline block the keeper resolves it — no button, no
+   judge. Every step in between produced a transaction id with an explorer link.
+
 ## Integrating Co-Sign (for other Stacks apps)
 
 Co-Sign is a primitive, not a destination. The contract has **no admin keys and no

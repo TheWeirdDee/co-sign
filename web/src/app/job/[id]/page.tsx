@@ -10,7 +10,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import { short, useWallet } from "@/hooks/useWallet";
-import { flowVaultRead, flowVaultWallet, READ_CONTEXT_ADDRESS } from "@/lib/flowvault";
+import {
+  flowVaultRead,
+  flowVaultWallet,
+  friendlyError,
+  parseTokenAmount,
+  READ_CONTEXT_ADDRESS,
+} from "@/lib/flowvault";
 import {
   coSign,
   confirmFunding,
@@ -133,7 +139,7 @@ export default function JobInstrument() {
       const txid = (res?.txid ?? res?.txId ?? "").replace(/^0x/, "");
       push({ label, txid: txid || undefined });
     } catch (e) {
-      push({ label, err: e instanceof Error ? e.message : String(e) });
+      push({ label, err: friendlyError(e) });
     } finally {
       setBusy(null);
       refresh();
@@ -141,8 +147,7 @@ export default function JobInstrument() {
   };
 
   const doCoSign = act("co-sign", async () => {
-    const micro = BigInt(Math.round(parseFloat(stake || "0") * 1e6));
-    return coSign(jobId, micro);
+    return coSign(jobId, parseTokenAmount(stake || "0"));
   });
 
   const doDeposit = act("deposit & lock", async () => {

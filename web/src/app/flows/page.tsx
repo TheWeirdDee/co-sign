@@ -33,7 +33,7 @@ interface LogEntry {
   note?: string;
 }
 
-const micro = (v: string) => BigInt(Math.round(parseFloat(v) * 1e6));
+import { parseTokenAmount as micro } from "@/lib/flowvault";
 
 export default function Flows() {
   const [address, setAddress] = useState<string | null>(null);

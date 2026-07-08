@@ -9,7 +9,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import { useWallet } from "@/hooks/useWallet";
-import { flowVaultRead, isStxAddress, READ_CONTEXT_ADDRESS } from "@/lib/flowvault";
+import {
+  flowVaultRead,
+  friendlyError,
+  isStxAddress,
+  parseTokenAmount,
+  READ_CONTEXT_ADDRESS,
+} from "@/lib/flowvault";
 import {
   createJob,
   explorerTxUrl,
@@ -48,8 +54,11 @@ export default function Create() {
   }, [address]);
 
   const jobValueMicro = useMemo(() => {
-    const v = parseFloat(value);
-    return Number.isFinite(v) && v > 0 ? BigInt(Math.round(v * 1e6)) : 0n;
+    try {
+      return parseTokenAmount(value); // deterministic string -> micro-units, no floats
+    } catch {
+      return 0n;
+    }
   }, [value]);
   const windowBlocks = parseInt(window_ || "0", 10);
   const deadline = blockHeight ? blockHeight + windowBlocks : null;
@@ -120,7 +129,7 @@ export default function Create() {
         await new Promise((r) => setTimeout(r, 10_000));
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(friendlyError(e));
     } finally {
       setBusy(null);
     }

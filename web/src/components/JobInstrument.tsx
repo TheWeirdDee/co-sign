@@ -98,6 +98,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
   const [stake, setStake] = useState<string>("");
   const [busy, setBusy] = useState<string | null>(null);
   const [phase, setPhase] = useState<"signing" | "confirming" | null>(null);
+  const [step, setStep] = useState<{ i: number; n: number } | null>(null);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [verifyTxid, setVerifyTxid] = useState<string | null>(null);
   const stakeTouched = useRef(false);
@@ -230,6 +231,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
     } finally {
       setBusy(null);
       setPhase(null);
+      setStep(null);
       refresh();
     }
   };
@@ -254,6 +256,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
     const t = terms ?? (await readTerms(jobId));
     if (!terms) setTerms(t);
     const fv = flowVaultWallet(address!);
+    setStep({ i: 1, n: 3 });
     const r1: any = await fv.setRoutingRules({
       lockAmount: t.lockAmount,
       lockUntilBlock: t.lockUntilBlock,
@@ -261,12 +264,14 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
       splitAmount: 0n,
     });
     push({ label: "set-routing-rules", txid: (r1?.txid ?? r1?.txId ?? "").replace(/^0x/, "") });
+    setStep({ i: 2, n: 3 });
     const r2: any = await fv.deposit(t.lockAmount);
     const depositTxid = (r2?.txid ?? r2?.txId ?? "").replace(/^0x/, "");
     push({ label: "deposit (lock executes)", txid: depositTxid });
     // Let the deposit confirm before the third signature — three rapid txs from
     // one wallet collide on the nonce and the node rejects the last broadcast.
     if (depositTxid) await awaitTx(depositTxid);
+    setStep({ i: 3, n: 3 });
     try {
       return await confirmFunding(jobId);
     } catch {
@@ -655,10 +660,10 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
         {canDeposit && (
           <button className="btn btn-bone" onClick={doDeposit} disabled={!!busy}>
             {busy === "deposit & lock"
-              ? phase === "confirming"
-                ? "Confirming on-chain…"
-                : "Locking…"
-              : "Prove delivery — deposit & lock"}
+              ? `${step ? `${step.i}/${step.n} ` : ""}${
+                  phase === "confirming" ? "confirming on-chain…" : "locking…"
+                }`
+              : "Prove delivery — deposit & lock (3 signatures)"}
           </button>
         )}
         {active && deadlineReached && (

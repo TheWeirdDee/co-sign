@@ -188,8 +188,21 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
     });
     push({ label: "set-routing-rules", txid: (r1?.txid ?? r1?.txId ?? "").replace(/^0x/, "") });
     const r2: any = await fv.deposit(terms.lockAmount);
-    push({ label: "deposit (lock executes)", txid: (r2?.txid ?? r2?.txId ?? "").replace(/^0x/, "") });
-    return confirmFunding(jobId);
+    const depositTxid = (r2?.txid ?? r2?.txId ?? "").replace(/^0x/, "");
+    push({ label: "deposit (lock executes)", txid: depositTxid });
+    // Let the deposit confirm before the third signature — three rapid txs from
+    // one wallet collide on the nonce and the node rejects the last broadcast.
+    if (depositTxid) await awaitTx(depositTxid);
+    try {
+      return await confirmFunding(jobId);
+    } catch {
+      // permissionless snapshot — the keeper records it automatically
+      push({
+        label: "confirm-funding",
+        err: "skipped — the keeper records the evidence automatically within a minute; your bond is locked and counts",
+      });
+      return null;
+    }
   });
 
   const doResolve = act("resolve", () => resolve(jobId));

@@ -357,6 +357,16 @@ a.read:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .sec-c > p{color:var(--bone-dim);max-width:54ch;margin:14px auto 0;line-height:1.6}
 .sec-c .story-grid{text-align:left;margin-top:34px}
 
+.faq{text-align:left;max-width:760px;margin:34px auto 0;border-top:1px solid var(--hairline)}
+.faq-item{border-bottom:1px solid var(--hairline)}
+.faq-item summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 2px;font-family:var(--display);font-size:17px;color:var(--bone)}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary span:first-child{flex:1}
+.faq-ic{font-family:var(--mono);font-size:16px;color:var(--brass-lit);flex-shrink:0;transition:transform .2s}
+.faq-item[open] .faq-ic{transform:rotate(45deg)}
+.faq-item p{color:var(--bone-dim);font-size:14.5px;line-height:1.65;max-width:64ch;padding:0 2px 22px}
+.faq-item p b{color:var(--bone);font-weight:600}
+
 /* full-width panel card (reference full-bleed product card) */
 .panel-card{background:var(--ink-raised);border:1px solid var(--hairline);border-radius:4px;padding:8px 26px 6px;margin-top:34px;text-align:left}
 .panel-card .steps{margin-top:0;border-top:none}

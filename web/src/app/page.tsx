@@ -401,6 +401,92 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* FAQ — the questions people actually ask when they first try this */}
+        <section className="sec-c" id="faq">
+          <span className="pill">Questions</span>
+          <h2>Before you sign anything.</h2>
+          <p>The things people actually ask the first time they open a job.</p>
+          <div className="faq">
+            <details className="faq-item">
+              <summary>
+                <span>When I &ldquo;draft a job,&rdquo; whose action is that?</span>
+                <span className="faq-ic" aria-hidden="true">+</span>
+              </summary>
+              <p>
+                Always the <b>client&apos;s</b> — the one hiring and paying. Drafting names the
+                worker, sets the pay, and escrows <b>pay + 2%</b> up front. The backer and the
+                worker act later, on the job&apos;s own card — the client never comes back after
+                this step.
+              </p>
+            </details>
+            <details className="faq-item">
+              <summary>
+                <span>How does the app know a job was actually completed?</span>
+                <span className="faq-ic" aria-hidden="true">+</span>
+              </summary>
+              <p>
+                It doesn&apos;t take anyone&apos;s word for it. The worker proves delivery by
+                locking their own <b>performance bond</b> (equal to the job&apos;s value) in
+                their own FlowVault vault. FlowVault physically prevents withdrawing that early,
+                so a live lock is unfakeable proof a cycle is underway. At the deadline block,{" "}
+                <b>resolve</b> reads that vault directly — no one judges the work itself.
+              </p>
+            </details>
+            <details className="faq-item">
+              <summary>
+                <span>Do I need a backer before I can get paid?</span>
+                <span className="faq-ic" aria-hidden="true">+</span>
+              </summary>
+              <p>
+                No. Payment always settles at the <b>deadline block</b>, backed or not — a
+                backer only shortens how long the worker&apos;s own bond stays locked (the
+                &ldquo;improved terms&rdquo;). No backer just means the slower, fully-cautious
+                timer instead of a faster one.
+              </p>
+            </details>
+            <details className="faq-item">
+              <summary>
+                <span>Why does the worker lock money too — isn&apos;t staking the backer&apos;s job?</span>
+                <span className="faq-ic" aria-hidden="true">+</span>
+              </summary>
+              <p>
+                They&apos;re two different mechanisms. The backer&apos;s <b>20% stake</b> is
+                someone else vouching for the worker with their own money. The worker&apos;s{" "}
+                <b>performance bond</b> (100% of the job&apos;s value, in the worker&apos;s own
+                vault) is the unfakeable proof-of-delivery signal above — it comes back to them
+                in full, but it takes one more click (&ldquo;reclaim your bond&rdquo;) after
+                settlement, since only the worker&apos;s own wallet can pull it out of their own
+                vault.
+              </p>
+            </details>
+            <details className="faq-item">
+              <summary>
+                <span>What is that block number, and why does it keep climbing?</span>
+                <span className="faq-ic" aria-hidden="true">+</span>
+              </summary>
+              <p>
+                That&apos;s the Stacks chain&apos;s own clock — it advances roughly every 50
+                seconds no matter what any job is doing, and every job on the network shares it.
+                The only number that matters to your job is its own <b>deadline block</b>; once
+                the chain clock reaches it, resolution is permissionless and automatic.
+              </p>
+            </details>
+            <details className="faq-item">
+              <summary>
+                <span>Is everything paid back to me automatically?</span>
+                <span className="faq-ic" aria-hidden="true">+</span>
+              </summary>
+              <p>
+                The coordinator&apos;s side is: <b>resolve</b>/<b>disburse</b> route the client&apos;s
+                escrow and the backer&apos;s stake without anyone lifting a finger. The one
+                exception is the worker&apos;s own performance bond — FlowVault requires the vault
+                owner&apos;s own signature to withdraw, so the worker reclaims that one
+                themselves, once, after settlement.
+              </p>
+            </details>
+          </div>
+        </section>
+
       </div>
 
       {/* FOOTER PANEL — full-bleed: close + footer merged (reference layout) */}

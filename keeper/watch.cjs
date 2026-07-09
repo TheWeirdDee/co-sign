@@ -50,7 +50,7 @@ const FV_ADDR = "STD7QG84VQQ0C35SZM2EYTHZV4M8FQ0R7YNSQWPD";
 const FV_NAME = "flowvault-v2";
 const USDCX_ADDR = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM";
 const TOKEN = Cl.contractPrincipal(USDCX_ADDR, "usdcx");
-const POLL_MS = Number(process.env.POLL_MS ?? 30_000);
+const POLL_MS = Number(process.env.POLL_MS ?? 45_000);
 const FEE = 30_000n;
 
 const KEY = process.env.KEEPER_PRIVATE_KEY;
@@ -202,12 +202,19 @@ async function tick() {
   keeper:   ${KEEPER_ADDR} (permissionless -- no special contract role)
   poll:     every ${POLL_MS / 1000}s`);
   for (;;) {
+    let wait = POLL_MS;
     try {
       const { h, n } = await tick();
       log(null, `tick ok -- block ${h}, ${n} job(s), ${pending.size} pending tx`);
     } catch (e) {
-      log(null, `tick failed (${e.message ?? e}); retrying next poll`);
+      const msg = String(e.message ?? e);
+      // Hiro's 429 body names its own retry window ("try again in N seconds") --
+      // honor it instead of immediately retrying into the same still-active
+      // per-minute window, which just burns another request on a guaranteed 429.
+      const hint = msg.match(/try again in (\d+) second/i);
+      if (hint) wait = Math.max(wait, (Number(hint[1]) + 3) * 1000);
+      log(null, `tick failed (${msg}); retrying in ${Math.round(wait / 1000)}s`);
     }
-    await new Promise((r) => setTimeout(r, POLL_MS));
+    await new Promise((r) => setTimeout(r, wait));
   }
 })();

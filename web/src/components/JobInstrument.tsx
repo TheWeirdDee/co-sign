@@ -97,6 +97,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
   });
   const [stake, setStake] = useState<string>("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [phase, setPhase] = useState<"signing" | "confirming" | null>(null);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [verifyTxid, setVerifyTxid] = useState<string | null>(null);
   const stakeTouched = useRef(false);
@@ -208,21 +209,27 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
     }
   };
 
+  // busy identifies WHICH button is running (drives disabled + which label
+  // reacts); phase is what to actually show for it, so a long confirmation
+  // wait doesn't silently fall back to looking idle-but-disabled with no
+  // feedback at all.
   const act = (label: string, fn: () => Promise<unknown>) => async () => {
     if (!address) return void connect();
     setBusy(label);
+    setPhase("signing");
     try {
       const res: any = await fn();
       const txid = (res?.txid ?? res?.txId ?? "").replace(/^0x/, "");
       push({ label, txid: txid || undefined });
       if (txid) {
-        setBusy("confirming on-chain…");
+        setPhase("confirming");
         await awaitTx(txid);
       }
     } catch (e) {
       push({ label, err: friendlyError(e) });
     } finally {
       setBusy(null);
+      setPhase(null);
       refresh();
     }
   };
@@ -240,16 +247,21 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
   });
 
   const doDeposit = act("deposit & lock", async () => {
-    if (!job || !terms) throw new Error("terms not loaded yet");
+    if (!job) throw new Error("job not loaded yet");
+    // Don't fail just because the passive 30s poll hasn't populated terms yet
+    // (often exactly why it's missing: a rate-limited read) -- fetch fresh
+    // ones right now instead of asking the user to wait and click again.
+    const t = terms ?? (await readTerms(jobId));
+    if (!terms) setTerms(t);
     const fv = flowVaultWallet(address!);
     const r1: any = await fv.setRoutingRules({
-      lockAmount: terms.lockAmount,
-      lockUntilBlock: terms.lockUntilBlock,
+      lockAmount: t.lockAmount,
+      lockUntilBlock: t.lockUntilBlock,
       splitAddress: null,
       splitAmount: 0n,
     });
     push({ label: "set-routing-rules", txid: (r1?.txid ?? r1?.txId ?? "").replace(/^0x/, "") });
-    const r2: any = await fv.deposit(terms.lockAmount);
+    const r2: any = await fv.deposit(t.lockAmount);
     const depositTxid = (r2?.txid ?? r2?.txId ?? "").replace(/^0x/, "");
     push({ label: "deposit (lock executes)", txid: depositTxid });
     // Let the deposit confirm before the third signature — three rapid txs from
@@ -630,29 +642,49 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
               aria-label="stake in USDCx"
             />
             <button className="btn btn-bone" onClick={doCoSign} disabled={!!busy}>
-              {busy === "co-sign" ? "Signing…" : address ? "Co-sign · stake" : "Connect to co-sign"}
+              {busy === "co-sign"
+                ? phase === "confirming"
+                  ? "Confirming on-chain…"
+                  : "Signing…"
+                : address
+                  ? "Co-sign · stake"
+                  : "Connect to co-sign"}
             </button>
           </>
         )}
         {canDeposit && (
           <button className="btn btn-bone" onClick={doDeposit} disabled={!!busy}>
-            {busy === "deposit & lock" ? "Locking…" : "Prove delivery — deposit & lock"}
+            {busy === "deposit & lock"
+              ? phase === "confirming"
+                ? "Confirming on-chain…"
+                : "Locking…"
+              : "Prove delivery — deposit & lock"}
           </button>
         )}
         {active && deadlineReached && (
           <button className="btn btn-ghost" onClick={doResolve} disabled={!!busy}>
-            {busy === "resolve" ? "Resolving…" : "Resolve now (or let the keeper)"}
+            {busy === "resolve"
+              ? phase === "confirming"
+                ? "Confirming on-chain…"
+                : "Resolving…"
+              : "Resolve now (or let the keeper)"}
           </button>
         )}
         {(settled || ghosted) && job && !job.disbursed && (
           <button className="btn btn-ghost" onClick={doDisburse} disabled={!!busy}>
-            {busy === "release payout" ? "Releasing…" : "Release payout"}
+            {busy === "release payout"
+              ? phase === "confirming"
+                ? "Confirming on-chain…"
+                : "Releasing…"
+              : "Release payout"}
           </button>
         )}
         {isNewcomer && w && w.unlockedBalance > 0n && (
           <button className="btn btn-bone" onClick={doReclaim} disabled={!!busy}>
             {busy === "reclaim bond"
-              ? "Reclaiming…"
+              ? phase === "confirming"
+                ? "Confirming on-chain…"
+                : "Reclaiming…"
               : `Reclaim your bond — ${usd(w.unlockedBalance)} USDCx`}
           </button>
         )}

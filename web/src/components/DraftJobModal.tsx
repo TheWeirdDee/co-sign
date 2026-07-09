@@ -111,17 +111,31 @@ export default function DraftJobModal({
       setTxid(id);
       setBusy("confirming on-chain…");
       for (let i = 0; i < 60; i++) {
-        const j = await (await fetch(`https://api.testnet.hiro.so/extended/v1/tx/0x${id}`)).json();
-        if (j.tx_status === "success") {
-          const m = String(j.tx_result?.repr ?? "").match(/u(\d+)/);
-          onDrafted(m?.[1]);
-          return;
+        try {
+          const j = await (await fetch(`https://api.testnet.hiro.so/extended/v1/tx/0x${id}`)).json();
+          if (j.tx_status === "success") {
+            const m = String(j.tx_result?.repr ?? "").match(/u(\d+)/);
+            onDrafted(m?.[1]);
+            return;
+          }
+          if (String(j.tx_status).startsWith("abort")) {
+            const err = new Error(cosignErrorMessage(j.tx_result?.repr));
+            (err as Error & { onchainAbort?: boolean }).onchainAbort = true;
+            throw err;
+          }
+        } catch (e) {
+          // A rate-limited or dropped read here does NOT mean the transaction
+          // failed -- it's already broadcast. Keep waiting; only an explicit
+          // on-chain abort (marked above) should end this early.
+          if ((e as Error & { onchainAbort?: boolean }).onchainAbort) throw e;
         }
-        if (String(j.tx_status).startsWith("abort"))
-          throw new Error(cosignErrorMessage(j.tx_result?.repr));
         await new Promise((r) => setTimeout(r, 10_000));
       }
-      onDrafted(undefined);
+      setBusy(null);
+      setError(
+        "Still waiting for confirmation after 10 minutes — check the board before drafting again, this may have already gone through."
+      );
+      return;
     } catch (e) {
       setError(friendlyError(e));
     } finally {

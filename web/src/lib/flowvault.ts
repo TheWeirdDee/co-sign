@@ -108,7 +108,7 @@ export function friendlyError(e: unknown): string {
       return known[code ?? -1] ?? `The contract rejected the call${code ? ` (code ${code})` : ""}.`;
     }
     case "NetworkError":
-      return "The Stacks API is unreachable — try again in a moment.";
+      return "The Stacks testnet API is rate-limited or briefly unreachable — this is usually not a real failure. Wait about 15 seconds, check the board or explorer for whether it actually went through, then only retry if it didn't (retrying a already-broadcast action risks a duplicate).";
     default:
       return msg;
   }

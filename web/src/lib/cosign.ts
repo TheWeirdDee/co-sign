@@ -36,6 +36,49 @@ export function explorerContractUrl(): string {
   return `https://explorer.hiro.so/txid/${COSIGN_PRINCIPAL}?chain=${chain()}&tab=transactions`;
 }
 
+const API_BASE = `https://api.${chain()}.hiro.so`;
+
+// The definitive proof for a job, in order of preference: its own resolution
+// beats its own funding beats its own opening. No database — this is a live
+// read of the coordinator's real transaction history, the same data the
+// explorer itself shows, just pre-filtered to the one job that matters here.
+const PROOF_PRIORITY = ["resolve", "disburse", "confirm-funding", "co-sign", "create-job"];
+
+/**
+ * Find the single most relevant on-chain transaction for a given job, so
+ * "verify on-chain" can jump straight to it instead of a 68-row list.
+ * Returns null if nothing is found (falls back to explorerContractUrl).
+ */
+export async function findJobTxid(jobId: bigint): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/extended/v1/address/${COSIGN_PRINCIPAL}/transactions?limit=50`
+    );
+    const j = await res.json();
+    const results: any[] = j.results ?? [];
+    const wantU = `u${jobId}`;
+    const candidates = results.filter((r) => {
+      if (r.tx_type !== "contract_call") return false;
+      const fn = r.contract_call?.function_name;
+      if (fn === "create-job") {
+        return r.tx_result?.repr === `(ok ${wantU})`;
+      }
+      const firstArg = r.contract_call?.function_args?.[0]?.repr;
+      return firstArg === wantU;
+    });
+    if (candidates.length === 0) return null;
+    candidates.sort((a, b) => {
+      const pa = PROOF_PRIORITY.indexOf(a.contract_call?.function_name);
+      const pb = PROOF_PRIORITY.indexOf(b.contract_call?.function_name);
+      if (pa !== pb) return pa - pb;
+      return a.tx_status === "success" ? -1 : b.tx_status === "success" ? 1 : 0;
+    });
+    return candidates[0].tx_id as string;
+  } catch {
+    return null;
+  }
+}
+
 async function walletCall(functionName: string, functionArgs: ClarityValue[]) {
   const res = await request("stx_callContract", {
     contract: COSIGN_PRINCIPAL as `${string}.${string}`,

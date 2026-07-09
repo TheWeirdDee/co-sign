@@ -28,6 +28,7 @@ import {
   explorerAddressUrl,
   explorerContractUrl,
   explorerTxUrl,
+  findJobTxid,
   getJob,
   getStanding,
   jobRef,
@@ -97,6 +98,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
   const [stake, setStake] = useState<string>("");
   const [busy, setBusy] = useState<string | null>(null);
   const [log, setLog] = useState<LogEntry[]>([]);
+  const [verifyTxid, setVerifyTxid] = useState<string | null>(null);
   const stakeTouched = useRef(false);
 
   const push = (e: LogEntry) => setLog((l) => [e, ...l]);
@@ -140,6 +142,17 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
     const t = setInterval(refresh, 30_000);
     return () => clearInterval(t);
   }, [refresh]);
+
+  // The specific proof tx for this job — refetched only on real lifecycle
+  // transitions (not the 30s poll), since it can't change otherwise.
+  useEffect(() => {
+    if (!job || jobId <= 0n) return;
+    let live = true;
+    findJobTxid(jobId).then((id) => live && setVerifyTxid(id));
+    return () => {
+      live = false;
+    };
+  }, [jobId, job?.status, job?.disbursed, job?.funded]);
 
   const [copied, setCopied] = useState(false);
   const shareJob = async () => {
@@ -512,10 +525,14 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
             </span>
             <a
               className="read"
-              href={explorerContractUrl()}
+              href={verifyTxid ? explorerTxUrl(verifyTxid) : explorerContractUrl()}
               target="_blank"
               rel="noreferrer"
-              title="Every transaction on the coordinator contract, newest first — find this job's by address or timing"
+              title={
+                verifyTxid
+                  ? "This job's own transaction on the explorer"
+                  : "Every transaction on the coordinator contract — this job's own tx is still loading"
+              }
             >
               verify on-chain ↗
             </a>

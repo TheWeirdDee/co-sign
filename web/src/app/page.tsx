@@ -409,14 +409,15 @@ export default function Landing() {
           <div className="faq">
             <details className="faq-item">
               <summary>
-                <span>When I &ldquo;draft a job,&rdquo; whose action is that?</span>
+                <span>What is Co-Sign, in one breath?</span>
                 <span className="faq-ic" aria-hidden="true">+</span>
               </summary>
               <p>
-                Always the <b>client&apos;s</b> — the one hiring and paying. Drafting names the
-                worker, sets the pay, and escrows <b>pay + 2%</b> up front. The backer and the
-                worker act later, on the job&apos;s own card — the client never comes back after
-                this step.
+                A client escrows pay for a worker with no track record. Anyone who trusts that
+                worker can back them by staking real money — earning a reward if they&apos;re
+                right, paying restitution to the client if they&apos;re wrong. Every step is a
+                FlowVault lock; the deadline block resolves it. No server key, no database, no
+                judge — just three parties and the chain.
               </p>
             </details>
             <details className="faq-item">

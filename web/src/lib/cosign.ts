@@ -207,3 +207,30 @@ export function requiredEscrow(jobValueMicro: bigint): bigint {
 export function stakeFloor(jobValueMicro: bigint): bigint {
   return (jobValueMicro * 20n) / 100n;
 }
+
+// The coordinator's own abort codes (cosign.clar) in plain words — a raw
+// on-chain rejection like "(err u104)" means nothing to someone who isn't
+// reading the contract source.
+const COSIGN_ERRORS: Record<string, string> = {
+  "100": "That job doesn't exist on-chain (wrong id, or it hasn't confirmed yet).",
+  "101": "The job value must be a positive amount.",
+  "102": "The deadline must be a block in the future.",
+  "103": "This job isn't in the right state for that action anymore — reload the page.",
+  "104": "Your stake is below the 20% floor of the job's value — raise it and try again.",
+  "105": "You can't take this role on a job where you're already the client or the worker.",
+  "107": "The deadline block hasn't been reached yet — resolution can't be submitted early.",
+  "108": "This job was already resolved — settlement is final and can't run twice.",
+  "109": "The worker hasn't proven delivery yet, or the evidence doesn't match this job's window.",
+  "110": "The funding window for this job has already closed.",
+  "111": "Wrong token contract — this coordinator only moves USDCx.",
+  "112": "Payout is deferred: this coordinator's vault is still locked by a later, overlapping job. It clears automatically — try \"Release payout\" again once that job's lock expires.",
+  "113": "This job's payout was already released.",
+  "114": "This job hasn't been resolved yet, so there's nothing to disburse.",
+};
+
+/** Turn a raw Clarity abort repr like "(err u104)" into plain English. */
+export function cosignErrorMessage(repr: string | undefined | null): string {
+  const code = String(repr ?? "").match(/u(\d+)/)?.[1];
+  if (code && COSIGN_ERRORS[code]) return COSIGN_ERRORS[code];
+  return `transaction rejected on-chain${repr ? `: ${repr}` : ""}`;
+}

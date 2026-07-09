@@ -14,7 +14,7 @@ import {
   parseTokenAmount,
   READ_CONTEXT_ADDRESS,
 } from "@/lib/flowvault";
-import { createJob, explorerTxUrl, jobRef, listJobs, requiredEscrow } from "@/lib/cosign";
+import { cosignErrorMessage, createJob, explorerTxUrl, jobRef, listJobs, requiredEscrow } from "@/lib/cosign";
 
 const MIN_WINDOW = 30;
 
@@ -118,7 +118,7 @@ export default function DraftJobModal({
           return;
         }
         if (String(j.tx_status).startsWith("abort"))
-          throw new Error(`transaction rejected: ${j.tx_result?.repr ?? j.tx_status}`);
+          throw new Error(cosignErrorMessage(j.tx_result?.repr));
         await new Promise((r) => setTimeout(r, 10_000));
       }
       onDrafted(undefined);

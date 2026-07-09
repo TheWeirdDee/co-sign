@@ -22,12 +22,14 @@ import {
 import {
   coSign,
   confirmFunding,
+  cosignErrorMessage,
   COSIGN_PRINCIPAL,
   disburse,
   explorerAddressUrl,
   explorerContractUrl,
   explorerTxUrl,
   getJob,
+  getStanding,
   jobRef,
   readTerms,
   resolve,
@@ -88,6 +90,10 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
   const [terms, setTerms] = useState<Terms | null>(null);
   const [w, setW] = useState<Witnesses | null>(null);
   const [resolution, setResolution] = useState<Resolution | null>(null);
+  const [standing, setStanding] = useState<{ newcomer: bigint; backer: bigint | null }>({
+    newcomer: 0n,
+    backer: null,
+  });
   const [stake, setStake] = useState<string>("");
   const [busy, setBusy] = useState<string | null>(null);
   const [log, setLog] = useState<LogEntry[]>([]);
@@ -102,10 +108,12 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
       setJob(j);
       if (!j) return;
       const fv = flowVaultRead();
-      const [height, vs, hasLocked] = await Promise.all([
+      const [height, vs, hasLocked, newcomerStanding, backerStanding] = await Promise.all([
         fv.getCurrentBlockHeight(address ?? READ_CONTEXT_ADDRESS),
         fv.getVaultState(j.newcomer),
         fv.hasLockedFunds(j.newcomer),
+        getStanding(j.newcomer),
+        j.backer ? getStanding(j.backer) : Promise.resolve(null),
       ]);
       setW({
         height,
@@ -113,6 +121,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
         hasLocked,
         unlockedBalance: BigInt(vs.unlockedBalance),
       });
+      setStanding({ newcomer: newcomerStanding, backer: backerStanding });
       if (j.status === "open" || j.status === "backed") {
         setTerms(await readTerms(jobId));
       } else {
@@ -153,10 +162,13 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
           await fetch(`https://api.testnet.hiro.so/extended/v1/tx/0x${txid}`)
         ).json();
         if (j.tx_status === "success") return;
-        if (String(j.tx_status).startsWith("abort"))
-          throw new Error(`transaction rejected: ${j.tx_result?.repr ?? j.tx_status}`);
+        if (String(j.tx_status).startsWith("abort")) {
+          const err = new Error(cosignErrorMessage(j.tx_result?.repr));
+          (err as Error & { onchainAbort?: boolean }).onchainAbort = true;
+          throw err;
+        }
       } catch (e) {
-        if (String((e as Error).message).startsWith("transaction rejected")) throw e;
+        if ((e as Error & { onchainAbort?: boolean }).onchainAbort) throw e;
       }
       await new Promise((r) => setTimeout(r, 10_000));
     }
@@ -181,7 +193,17 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
     }
   };
 
-  const doCoSign = act("co-sign", async () => coSign(jobId, parseTokenAmount(stake || "0")));
+  const doCoSign = act("co-sign", async () => {
+    if (!job) throw new Error("job not loaded yet");
+    const amt = parseTokenAmount(stake || "0");
+    const floor = stakeFloor(job.jobValue);
+    if (amt < floor) {
+      throw new Error(
+        `Your stake must be at least ${usd(floor)} USDCx — 20% of the job's ${usd(job.jobValue)} value.`
+      );
+    }
+    return coSign(jobId, amt);
+  });
 
   const doDeposit = act("deposit & lock", async () => {
     if (!job || !terms) throw new Error("terms not loaded yet");
@@ -363,6 +385,15 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
                   "— no co-signer yet —"
                 )}
               </div>
+              {job?.backer && (
+                <div className="card-sub" title="Clean completions recorded by the coordinator contract — backed or delivered without ghosting">
+                  {standing.backer === null
+                    ? "reading standing…"
+                    : standing.backer === 0n
+                      ? "no completions on record yet"
+                      : `${standing.backer.toString()} clean completion${standing.backer === 1n ? "" : "s"} on record`}
+                </div>
+              )}
               <div className="card-fig">
                 <span className="g">◈</span>
                 {job ? usd(job.stakeAmount) : "…"} USDCx
@@ -401,6 +432,11 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
                 ) : (
                   "…"
                 )}
+              </div>
+              <div className="card-sub" title="Clean completions recorded by the coordinator contract — backed or delivered without ghosting">
+                {standing.newcomer === 0n
+                  ? "no completions on record yet"
+                  : `${standing.newcomer.toString()} clean completion${standing.newcomer === 1n ? "" : "s"} on record`}
               </div>
               <div className="card-terms">
                 bond unlocks:{" "}
@@ -451,7 +487,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
               </b>
             </div>
             <div
-              className={`seal${job && job.status !== "open" ? " sealed" : ""}`}
+              className={`seal${job && job.status !== "open" ? " sealed" : ""}${settled ? " win" : ""}`}
               style={job && job.status !== "open" ? { opacity: 1 } : undefined}
             >
               <span>{settled ? "settled" : ghosted ? "ghosted" : "sealed"}</span>

@@ -131,7 +131,7 @@ a.read:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
 .close{padding:92px 0 110px;text-align:center}
 .close p{font-family:var(--display);font-style:italic;font-weight:300;font-size:clamp(26px,4vw,40px);color:var(--bone);letter-spacing:-0.01em;max-width:22ch;margin:0 auto 34px;line-height:1.18}
-.cs-page footer{border-top:1px solid var(--hairline);padding:26px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.cs-page footer:not(.foot-panel){border-top:1px solid var(--hairline);padding:26px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
 .foot-mark{font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--bone-dim)}
 .foot-note{font-family:var(--mono);font-size:11px;color:var(--bone-dim)}
 
@@ -140,7 +140,7 @@ a.read:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   .stage{order:2}
 }
 @media(max-width:560px){
-  .wrap{padding:0 20px}
+  .wrap,.foot-panel>.wrap{padding:0 20px}
   /* the nav's fixed row overflows narrow screens; let it stack (quality floor:
      responsive to mobile — deviation from the source file, which clipped) */
   .cs-page nav{flex-wrap:wrap;gap:10px}

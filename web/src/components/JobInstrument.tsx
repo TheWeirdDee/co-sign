@@ -40,6 +40,7 @@ interface Witnesses {
   height: number;
   lockUntil: number;
   hasLocked: boolean;
+  unlockedBalance: bigint;
 }
 
 interface Resolution {
@@ -106,7 +107,12 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
         fv.getVaultState(j.newcomer),
         fv.hasLockedFunds(j.newcomer),
       ]);
-      setW({ height, lockUntil: vs.lockUntilBlock, hasLocked });
+      setW({
+        height,
+        lockUntil: vs.lockUntilBlock,
+        hasLocked,
+        unlockedBalance: BigInt(vs.unlockedBalance),
+      });
       if (j.status === "open" || j.status === "backed") {
         setTerms(await readTerms(jobId));
       } else {
@@ -207,6 +213,14 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
 
   const doResolve = act("resolve", () => resolve(jobId));
   const doDisburse = act("release payout", () => disburse(jobId));
+
+  // The newcomer's performance bond lives in THEIR OWN FlowVault vault — the
+  // coordinator never touches it. Once the lock expires it just sits there,
+  // unlocked but not yet transferred back; only the newcomer's own wallet can
+  // pull it out, one more signature, same as any FlowVault withdrawal.
+  const doReclaim = act("reclaim bond", async () =>
+    flowVaultWallet(address!).withdraw(w!.unlockedBalance)
+  );
 
   if (jobId <= 0n || job === null) {
     return (
@@ -319,9 +333,12 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
             Live instrument · {jobRef(jobId)}
           </span>
           <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <span className="blockclock">
-              block <b>{w ? w.height.toLocaleString() : "…"}</b> /{" "}
-              {job ? job.deadlineBlock.toLocaleString() : "…"}
+            <span
+              className="blockclock"
+              title="This is the Stacks chain's own clock — it ticks forward roughly every 50 seconds no matter what any job is doing. It's shared by every job on the network; this job cares only about the second number, its deadline block."
+            >
+              chain block <b>{w ? w.height.toLocaleString() : "…"}</b> / this job&apos;s
+              deadline {job ? job.deadlineBlock.toLocaleString() : "…"}
             </span>
             <button className="share" onClick={shareJob} title="Copy a shareable link to this job">
               {copied ? "copied ✓" : "share"}
@@ -392,11 +409,13 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
                     ? improved
                       ? `faster · block ${terms.lockUntilBlock.toLocaleString()}`
                       : `full lock · block ${terms.lockUntilBlock.toLocaleString()}`
-                    : settled
-                      ? "paid"
-                      : ghosted
-                        ? "never funded"
-                        : "…"}
+                    : w && w.unlockedBalance > 0n
+                      ? "unlocked — reclaim below"
+                      : (settled || ghosted) && job?.funded
+                        ? "reclaimed"
+                        : ghosted
+                          ? "never funded"
+                          : "…"}
                 </span>
               </div>
               <div className="card-sub">
@@ -435,7 +454,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
               className={`seal${job && job.status !== "open" ? " sealed" : ""}`}
               style={job && job.status !== "open" ? { opacity: 1 } : undefined}
             >
-              <span>sealed</span>
+              <span>{settled ? "settled" : ghosted ? "ghosted" : "sealed"}</span>
             </div>
           </div>
 
@@ -474,10 +493,12 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
           <b>How the outcome is decided:</b> the worker proves delivery by locking a{" "}
           <b>{usd(job.jobValue)} USDCx performance bond</b> (equal to the job&apos;s value)
           in their <b>own</b> FlowVault vault through this job&apos;s window — the{" "}
-          <b>prove delivery</b> step. The bond is the worker&apos;s own money and comes back
-          to them <b>in full</b> at settlement, on top of their pay. It is a different
-          thing from the backer&apos;s 20% stake, and it works <b>with or without</b> a
-          backer.{" "}
+          <b>prove delivery</b> step. The bond is the worker&apos;s own money; it unlocks{" "}
+          <b>in full</b> once the window closes, on top of their pay — but FlowVault holds
+          it in the worker&apos;s vault until they personally pull it out with one more
+          click (&ldquo;Reclaim your bond&rdquo; below), the same as any FlowVault
+          withdrawal. It is a different thing from the backer&apos;s 20% stake, and it
+          works <b>with or without</b> a backer.{" "}
           {job.funded ? (
             <>
               Evidence is <b>recorded ✓</b> — at the deadline block this job settles clean
@@ -493,6 +514,18 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
           Payment always settles at the deadline block — backing shortens how long the
           worker&apos;s bond stays locked, not the payday. No one judges the work itself;
           the backer priced that risk with their own money.
+        </div>
+      )}
+
+      {/* the bond is unlocked but not yet withdrawn — this is the one manual
+          step nothing on this page does for the worker automatically */}
+      {!active && job && w && w.unlockedBalance > 0n && (
+        <div className="notice" style={{ marginTop: 14 }}>
+          <b>The worker&apos;s bond is unlocked but still sitting in their FlowVault
+          vault.</b> Settlement pays the job value from the coordinator&apos;s vault — it
+          does not touch the worker&apos;s own vault. Only the worker&apos;s wallet can pull
+          their <b>{usd(w.unlockedBalance)} USDCx</b> bond out, with the{" "}
+          <b>Reclaim your bond</b> button below.
         </div>
       )}
 
@@ -540,6 +573,13 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
         {(settled || ghosted) && job && !job.disbursed && (
           <button className="btn btn-ghost" onClick={doDisburse} disabled={!!busy}>
             {busy === "release payout" ? "Releasing…" : "Release payout"}
+          </button>
+        )}
+        {isNewcomer && w && w.unlockedBalance > 0n && (
+          <button className="btn btn-bone" onClick={doReclaim} disabled={!!busy}>
+            {busy === "reclaim bond"
+              ? "Reclaiming…"
+              : `Reclaim your bond — ${usd(w.unlockedBalance)} USDCx`}
           </button>
         )}
         <span className="mini">

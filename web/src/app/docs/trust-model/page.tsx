@@ -56,6 +56,28 @@ export default function Page() {
           deadline block arrives. Its key has no privileged role — a compromised keeper can
           only pay gas to do the protocol&apos;s own housekeeping.
         </div>
+
+        <h3>Known limitation: the worker&apos;s bond equals the full job value</h3>
+        <p>
+          FlowVault has no &quot;mark this delivered&quot; primitive — the only thing it can
+          prove is that a lock happened. <code>confirm-funding</code> and{" "}
+          <code>resolve</code> both require the worker&apos;s own vault to hold{" "}
+          <b>at least the full job value</b>, because a smaller lock would be a cheap, fakeable
+          signal on a large payout. The bond is never at risk — the coordinator only ever{" "}
+          <i>reads</i> the worker&apos;s vault, it never touches those funds, so nothing is
+          lost — it is returned in full once the window closes.
+        </p>
+        <div className="doc-note red">
+          <b>This is a real adoption barrier, not just a rough edge.</b> Requiring a worker to
+          already hold capital equal to the full job&apos;s value, just to prove they&apos;re
+          doing the work, cuts against the newcomers this product is meant to help — someone
+          taking a job because they need the money is exactly who is least likely to have that
+          money sitting idle first. It is honestly documented here rather than hidden.
+          Planned fix: a smaller worker bond (mirroring the backer&apos;s stake-and-slash
+          model) instead of full-value collateral — this requires a new coordinator deployment,
+          since the threshold is enforced on-chain in <code>confirm-funding</code> and{" "}
+          <code>resolve</code>, not in the UI.
+        </div>
       </section>
       <PrevNext slug="trust-model" />
     </>

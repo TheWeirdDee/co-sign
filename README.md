@@ -207,6 +207,17 @@ third-party contracts can accept any Co-Sign-compatible coordinator.
 
 Consequences of FlowVault's one-lock-per-vault design, stated plainly:
 
+- **The worker's bond equals the full job value — a real adoption barrier, not just a
+  rough edge.** FlowVault has no "mark this delivered" primitive, so `confirm-funding`
+  and `resolve` both require the worker's own vault to hold *at least the job's full
+  value* — a smaller lock would be a cheap, fakeable signal on a large payout. The bond
+  is never at risk (the coordinator only *reads* the worker's vault, never touches it,
+  and it returns in full at settlement), but requiring a newcomer to already hold capital
+  equal to the full job value, just to prove they're doing the work, cuts against exactly
+  the people this product is meant to help. **Planned fix:** a smaller worker bond
+  mirroring the backer's stake-and-slash model instead of full-value collateral — this
+  is enforced on-chain in `confirm-funding`/`resolve`, so fixing it means a new
+  coordinator deployment, not a UI change.
 - **Payout timing can lag under overlapping jobs.** Stakes/escrows of overlapping jobs
   share the coordinator vault's single lock, extended to the latest deadline. The
   *outcome* of every job is still fixed at its own deadline by `resolve`; only payout

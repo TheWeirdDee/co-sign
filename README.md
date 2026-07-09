@@ -13,15 +13,23 @@ FlowVault Builder Bounty.
 - **FlowVault:** `STD7QG84VQQ0C35SZM2EYTHZV4M8FQ0R7YNSQWPD.flowvault-v2`
 - **Token:** `ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usdcx` (testnet)
 
+## The problem, concretely
+
+On any freelance or gig-work platform, a first-time worker — zero completed jobs, zero
+reviews — looks identical to a scammer. Platforms respond by defaulting to maximum
+caution for everyone unproven: full pay held until the job window closes, no way to earn
+faster terms, no signal a client can act on besides a review system that's cheap to fake
+and free to give.
+
 ## The idea in three sentences
 
-A newcomer with no track record gets maximum-caution treatment: their payout locks for
-the full job window, because the chain has no reason to trust them. Someone who *does*
-trust them can co-sign the job — locking at least **20% of the job's value** as a stake,
-which measurably improves the newcomer's payout terms. If the newcomer delivers, the
-backer earns **2%**; if the newcomer ghosts, the stake is slashed **to the client who got
-let down**. Risking twenty to earn two means nobody stakes on a person they don't believe
-in — that asymmetry is what makes the trust signal honest.
+Co-Sign lets someone who actually knows this worker back them with real money instead of
+a review. A backer stakes at least **20% of the job's value** on the worker's outcome —
+which measurably improves the newcomer's payout terms. If the worker delivers, the
+backer earns **2%**; if the worker ghosts, that same stake becomes restitution paid
+straight **to the client who got let down**. Risking twenty to earn two means nobody
+stakes on a person they don't believe in — that asymmetry is what makes the trust signal
+honest.
 
 ## The mechanism
 

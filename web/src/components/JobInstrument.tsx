@@ -100,11 +100,12 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
   const [log, setLog] = useState<LogEntry[]>([]);
   const [verifyTxid, setVerifyTxid] = useState<string | null>(null);
   const stakeTouched = useRef(false);
+  const loadedOnce = useRef(false);
 
   const push = (e: LogEntry) => setLog((l) => [e, ...l]);
 
   const refresh = useCallback(async () => {
-    if (jobId <= 0n) return;
+    if (jobId <= 0n) return true;
     try {
       const j = await getJob(jobId);
       setJob(j);
@@ -132,15 +133,33 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
       if (!stakeTouched.current) {
         setStake((Number(stakeFloor(j.jobValue)) / 1e6).toString());
       }
+      loadedOnce.current = true;
+      return true;
     } catch {
-      /* transient read failure — next poll wins */
+      return false; // transient read failure — caller decides how soon to retry
     }
   }, [jobId, address]);
 
   useEffect(() => {
-    refresh();
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // First load deserves a fast retry, not a 30s wait stuck on "Reading the
+    // instrument..." over one rate-limited request.
+    const attempt = async () => {
+      const ok = await refresh();
+      if (!ok && !loadedOnce.current && !cancelled) {
+        retryTimer = setTimeout(attempt, 4_000);
+      }
+    };
+    attempt();
+
     const t = setInterval(refresh, 30_000);
-    return () => clearInterval(t);
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      clearInterval(t);
+    };
   }, [refresh]);
 
   // The specific proof tx for this job — refetched only on real lifecycle

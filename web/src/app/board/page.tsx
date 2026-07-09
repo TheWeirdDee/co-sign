@@ -8,7 +8,7 @@
 // Color discipline: running/open cards are bone + brass only. Green = settled,
 // seal-red = ghosted — outcome colors, end-of-life only.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Nav from "@/components/Nav";
 import JobInstrument from "@/components/JobInstrument";
 import DraftJobModal, { humanWindow } from "@/components/DraftJobModal";
@@ -116,6 +116,7 @@ export default function Board() {
   const [stateFilter, setStateFilter] = useState<StateFilter>("all");
   const [mineOnly, setMineOnly] = useState(false);
   const [page, setPage] = useState(1);
+  const loadedOnce = useRef(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -125,16 +126,35 @@ export default function Board() {
       ]);
       setJobs(list);
       setHeight(h);
+      loadedOnce.current = true;
+      return true;
     } catch {
-      /* transient — next poll */
+      return false; // transient — caller decides how soon to retry
     }
   }, []);
 
   useEffect(() => {
-    refresh();
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // First load deserves a fast retry, not a 60s wait staring at "Reading
+    // the chain..." over one rate-limited request — subsequent polls back
+    // off to the normal cadence once something has actually loaded.
+    const attempt = async () => {
+      const ok = await refresh();
+      if (!ok && !loadedOnce.current && !cancelled) {
+        retryTimer = setTimeout(attempt, 4_000);
+      }
+    };
+    attempt();
+
     // 60s: the Hiro free tier rate-limits aggressive polling (surfaces as CORS)
     const t = setInterval(refresh, 60_000);
-    return () => clearInterval(t);
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      clearInterval(t);
+    };
   }, [refresh]);
 
   useEffect(() => {

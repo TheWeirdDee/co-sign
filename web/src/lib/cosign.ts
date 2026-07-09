@@ -119,15 +119,30 @@ export async function disburse(jobId: bigint) {
   return walletCall("disburse", [Cl.uint(jobId), tokenCV()]);
 }
 
-async function readOnly(functionName: string, functionArgs: ClarityValue[]) {
-  return fetchCallReadOnlyFunction({
-    contractAddress: cosignAddress,
-    contractName: cosignName,
-    functionName,
-    functionArgs,
-    network: NETWORK,
-    senderAddress: cosignAddress,
-  });
+// A single rate-limited read used to silently kill the WHOLE board load: one
+// 429 anywhere in a batch rejected that batch's Promise.all, the caller's
+// catch swallowed it, and jobs stayed null until the next 60s poll -- "stuck
+// on Reading the chain..." for up to a minute over one transient hiccup.
+// Retry a couple of times with a short backoff before actually giving up.
+async function readOnly(
+  functionName: string,
+  functionArgs: ClarityValue[]
+): Promise<ReturnType<typeof fetchCallReadOnlyFunction>> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fetchCallReadOnlyFunction({
+        contractAddress: cosignAddress,
+        contractName: cosignName,
+        functionName,
+        functionArgs,
+        network: NETWORK,
+        senderAddress: cosignAddress,
+      });
+    } catch (e) {
+      if (attempt >= 2) throw e;
+      await new Promise((r) => setTimeout(r, 900 * (attempt + 1)));
+    }
+  }
 }
 
 export interface Job {

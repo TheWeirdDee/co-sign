@@ -119,6 +119,14 @@ async function fundingEvidenceLive(job) {
   );
 }
 
+// Disburse preflight: payout can only succeed once the coordinator vault's
+// shared lock has expired (get-vault-state reports effective locked balance,
+// 0 when expired). Read it instead of paying fees for guaranteed u112 aborts.
+async function coordinatorUnlocked() {
+  const vs = (await ro(FV_ADDR, FV_NAME, "get-vault-state", [Cl.principal(COSIGN)])).value;
+  return BigInt(vs["locked-balance"].value) === 0n;
+}
+
 async function submit(jobId, action, functionName, functionArgs, h) {
   const key = `${jobId}:${action}`;
   if (pending.has(key) || (cooldown.get(key) ?? 0) > Date.now()) return;
@@ -166,6 +174,7 @@ async function checkPending() {
 async function tick() {
   const h = await height();
   const n = await jobCount();
+  let vaultOpen = null; // lazily checked once per tick
   for (let id = 1; id <= n; id++) {
     const job = await getJob(id);
     if (!job) continue;
@@ -175,7 +184,12 @@ async function tick() {
     } else if (active && !job.funded && (await fundingEvidenceLive(job))) {
       await submit(id, "confirm-funding", "confirm-funding", [Cl.uint(id)], h);
     } else if (!active && !job.disbursed) {
-      await submit(id, "disburse", "disburse", [Cl.uint(id), TOKEN], h);
+      if (vaultOpen === null) vaultOpen = await coordinatorUnlocked();
+      if (vaultOpen) {
+        await submit(id, "disburse", "disburse", [Cl.uint(id), TOKEN], h);
+      } else {
+        log(id, "payout deferred -- coordinator vault lock still shared with a later job");
+      }
     }
   }
   await checkPending();

@@ -29,6 +29,11 @@ html{scroll-behavior:smooth}
 .connect:hover{background:transparent;color:var(--bone)}
 .connect:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .connect.linked{background:transparent;color:var(--bone-dim);border-color:var(--hairline);letter-spacing:.02em}
+.connect.linked:hover{color:var(--bone);border-color:var(--bone-dim);background:transparent}
+.wallet-chip{display:inline-flex;gap:6px;align-items:stretch}
+.disc{font-family:var(--mono);font-size:13px;color:var(--bone-dim);background:transparent;border:1px solid var(--hairline);border-radius:2px;padding:9px 11px;cursor:pointer;transition:.2s;line-height:1}
+.disc:hover{color:var(--seal-lit);border-color:var(--seal-lit)}
+.disc:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
 /* hero: text left, LIVE instrument right */
 .hero{display:grid;grid-template-columns:0.92fr 1.08fr;gap:56px;align-items:center;padding:48px 0 40px;min-height:78vh}

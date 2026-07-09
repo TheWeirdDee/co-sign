@@ -373,7 +373,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
                 )}
               </div>
               <div className="card-terms">
-                payout unlocks:{" "}
+                bond unlocks:{" "}
                 <span className="t">
                   {active && terms
                     ? improved
@@ -458,13 +458,17 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
       {/* how the outcome is decided — the completion oracle, in plain words */}
       {active && job && (
         <div className="notice" style={{ marginTop: 14 }}>
-          <b>How the outcome is decided:</b> &quot;delivered&quot; means the worker locked{" "}
-          <b>{usd(job.jobValue)} USDCx</b> in their own FlowVault vault through this
-          job&apos;s window — the <b>deposit &amp; lock</b> step below.{" "}
+          <b>How the outcome is decided:</b> the worker proves delivery by locking a{" "}
+          <b>{usd(job.jobValue)} USDCx performance bond</b> (equal to the job&apos;s value)
+          in their <b>own</b> FlowVault vault through this job&apos;s window — the{" "}
+          <b>prove delivery</b> step. The bond is the worker&apos;s own money and comes back
+          to them <b>in full</b> at settlement, on top of their pay. It is a different
+          thing from the backer&apos;s 20% stake, and it works <b>with or without</b> a
+          backer.{" "}
           {job.funded ? (
             <>
-              That evidence is <b>recorded ✓</b> — at the deadline block this job settles
-              clean and everyone is paid.
+              Evidence is <b>recorded ✓</b> — at the deadline block this job settles clean
+              and everyone is paid.
             </>
           ) : (
             <>
@@ -473,7 +477,9 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
               client is made whole{job.backer ? ", paid from the backer's stake" : ""}.
             </>
           )}{" "}
-          No one judges the work itself — the backer priced that risk with their own money.
+          Payment always settles at the deadline block — backing shortens how long the
+          worker&apos;s bond stays locked, not the payday. No one judges the work itself;
+          the backer priced that risk with their own money.
         </div>
       )}
 

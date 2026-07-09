@@ -176,7 +176,8 @@ export default function DraftJobModal({
           </div>
 
           <div className="summary-line">
-            You escrow <b>{usd(escrow)} USDCx</b>: the job&apos;s <b>{usd(jobValueMicro)}</b>{" "}
+            You escrow <b>{usd(escrow)} USDCx</b>, debited from your wallet when you sign:
+            the job&apos;s <b>{usd(jobValueMicro)}</b>{" "}
             plus a <b>{usd(escrow - jobValueMicro)}</b> reward pool (2%) for whoever stakes
             their own money on this worker. Deliver → the worker is paid{" "}
             <b>{usd(jobValueMicro)}</b> and the 2% pays their backer — it{" "}

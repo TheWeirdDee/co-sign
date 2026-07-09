@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { short, useWallet } from "@/hooks/useWallet";
@@ -8,11 +9,23 @@ export default function Nav() {
   const { address, connecting, connect, disconnect } = useWallet();
   const router = useRouter();
   const pathname = usePathname();
+  const [copied, setCopied] = useState(false);
 
   const handleConnect = async () => {
     await connect();
     // connecting means you want to act — take the user to the board
     if (pathname === "/") router.push("/board");
+  };
+
+  const copyAddress = async () => {
+    if (!address) return;
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      window.prompt("Your address:", address);
+    }
   };
 
   return (
@@ -28,9 +41,19 @@ export default function Nav() {
       <div className="nav-right">
         <span className="tag">Stacks testnet</span>
         {address ? (
-          <button className="connect linked" onClick={disconnect} title="Disconnect">
-            {short(address)}
-          </button>
+          <span className="wallet-chip">
+            <button className="connect linked" onClick={copyAddress} title="Copy your address">
+              {copied ? "copied ✓" : short(address)}
+            </button>
+            <button
+              className="disc"
+              onClick={disconnect}
+              title="Disconnect wallet"
+              aria-label="Disconnect wallet"
+            >
+              ⏻
+            </button>
+          </span>
         ) : (
           <button className="connect" onClick={handleConnect} disabled={connecting}>
             {connecting ? "Connecting…" : "Connect wallet"}

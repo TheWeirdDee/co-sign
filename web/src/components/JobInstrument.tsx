@@ -10,6 +10,7 @@
 // backer's offer block on an OPEN job, next to the visible pay.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { humanWindow } from "@/components/DraftJobModal";
 import { short, useWallet } from "@/hooks/useWallet";
 import {
   flowVaultRead,
@@ -408,9 +409,14 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
           </div>
 
           <div className="deadline">
-            <div className="deadline-lbl">
+            <div className="deadline-lbl" title="Set by the client when the job was drafted — it cannot change.">
               both parties bound to
-              <b>deadline · block {job ? job.deadlineBlock.toLocaleString() : "…"}</b>
+              <b>
+                deadline · block {job ? job.deadlineBlock.toLocaleString() : "…"}
+                {job && w && w.height < job.deadlineBlock && (
+                  <> (≈ {humanWindow(job.deadlineBlock - w.height)} left)</>
+                )}
+              </b>
             </div>
             <div
               className={`seal${job && job.status !== "open" ? " sealed" : ""}`}

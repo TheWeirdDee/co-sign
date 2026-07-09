@@ -20,7 +20,7 @@ import { jobRef, listJobs, type BoardJob } from "@/lib/cosign";
 const STATE_FILTERS = ["all", "open", "running", "settled", "ghosted"] as const;
 type StateFilter = (typeof STATE_FILTERS)[number];
 
-const PAGE_SIZE = 2;
+const PAGE_SIZE = 6;
 
 const uiState = (j: BoardJob): StateFilter =>
   j.status === "backed" ? "running" : (j.status as StateFilter);

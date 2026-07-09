@@ -116,6 +116,15 @@ export default function Landing() {
 
   return (
     <main className="cs-page flex-1">
+      <div className="correction-bar">
+        <div className="wrap">
+          <span className="i">⚠</span> The demo video link entered on the bounty submission
+          form was wrong — the actual demo video is here:{" "}
+          <a href="https://youtu.be/HpBa9OtHMRw" target="_blank" rel="noreferrer">
+            youtu.be/HpBa9OtHMRw ↗
+          </a>
+        </div>
+      </div>
       <div className="wrap">
         <Nav />
 

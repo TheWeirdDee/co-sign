@@ -521,3 +521,11 @@ a.read:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .way h4{font-family:var(--display);font-weight:400;font-size:19px;color:var(--bone);margin-bottom:6px}
 .way p{font-size:13px;color:var(--bone-dim);line-height:1.55}
 @media(max-width:560px){.ways-grid{grid-template-columns:1fr}}
+
+.correction-bar{background:var(--seal);color:var(--bone);font-family:var(--mono);font-size:13px;
+  letter-spacing:.01em;text-align:center}
+.correction-bar .wrap{padding:10px 32px}
+.correction-bar .i{margin-right:6px}
+.correction-bar a{color:var(--bone);text-decoration:underline;text-underline-offset:2px;font-weight:600}
+.correction-bar a:hover{color:#fff}
+@media(max-width:560px){.correction-bar{font-size:11.5px}.correction-bar .wrap{padding:8px 20px}}

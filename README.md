@@ -9,6 +9,9 @@ primitives on Stacks.
 **Live demo:** https://co-sign-eight.vercel.app · Stacks testnet · built for the
 FlowVault Builder Bounty.
 
+> **⚠ Correction: the demo video link entered on the bounty submission form was
+> wrong.** The actual demo video is here: **https://youtu.be/HpBa9OtHMRw**
+
 - **Coordinator contract:** `ST31DYZV2SMJHDWQ39T8MWBW8N0AKDR0PVM43D6T2.cosign-v2`
 - **FlowVault:** `STD7QG84VQQ0C35SZM2EYTHZV4M8FQ0R7YNSQWPD.flowvault-v2`
 - **Token:** `ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.usdcx` (testnet)

@@ -515,7 +515,7 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
               href={explorerContractUrl()}
               target="_blank"
               rel="noreferrer"
-              title="Every transaction of this job, on the coordinator contract's explorer page"
+              title="Every transaction on the coordinator contract, newest first — find this job's by address or timing"
             >
               verify on-chain ↗
             </a>

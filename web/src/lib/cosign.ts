@@ -31,9 +31,9 @@ export function explorerAddressUrl(principal: string): string {
   return `https://explorer.hiro.so/address/${principal}?chain=${chain()}`;
 }
 
-/** Explorer page for the coordinator contract — every job tx is listed there. */
+/** Explorer's transaction list for the coordinator contract — every job tx is here. */
 export function explorerContractUrl(): string {
-  return `https://explorer.hiro.so/txid/${COSIGN_PRINCIPAL}?chain=${chain()}`;
+  return `https://explorer.hiro.so/txid/${COSIGN_PRINCIPAL}?chain=${chain()}&tab=transactions`;
 }
 
 async function walletCall(functionName: string, functionArgs: ClarityValue[]) {

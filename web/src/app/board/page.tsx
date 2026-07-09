@@ -20,6 +20,8 @@ import { jobRef, listJobs, type BoardJob } from "@/lib/cosign";
 const STATE_FILTERS = ["all", "open", "running", "settled", "ghosted"] as const;
 type StateFilter = (typeof STATE_FILTERS)[number];
 
+const PAGE_SIZE = 2;
+
 const uiState = (j: BoardJob): StateFilter =>
   j.status === "backed" ? "running" : (j.status as StateFilter);
 
@@ -113,6 +115,7 @@ export default function Board() {
   const [drafting, setDrafting] = useState(false);
   const [stateFilter, setStateFilter] = useState<StateFilter>("all");
   const [mineOnly, setMineOnly] = useState(false);
+  const [page, setPage] = useState(1);
 
   const refresh = useCallback(async () => {
     try {
@@ -148,6 +151,16 @@ export default function Board() {
       (stateFilter === "all" || uiState(j) === stateFilter) &&
       (!mineOnly || (address !== null && involves(j, address)))
   );
+
+  // reset to page 1 whenever the filtered set changes shape, so a filter
+  // switch never strands the view on a now-empty later page
+  useEffect(() => {
+    setPage(1);
+  }, [stateFilter, mineOnly]);
+
+  const pageCount = Math.max(1, Math.ceil((visible?.length ?? 0) / PAGE_SIZE));
+  const pageSafe = Math.min(page, pageCount);
+  const pageItems = visible?.slice((pageSafe - 1) * PAGE_SIZE, pageSafe * PAGE_SIZE);
 
   const browseOpen = () => {
     setStateFilter("open");
@@ -243,10 +256,35 @@ export default function Board() {
               </div>
             </div>
           )}
-          {visible?.map((j) => (
+          {pageItems?.map((j) => (
             <JobCard key={String(j.id)} job={j} height={height} onOpen={() => setOpen(j.id)} />
           ))}
         </div>
+
+        {visible !== undefined && visible.length > PAGE_SIZE && (
+          <div className="pagination">
+            <span className="pg-count">
+              page <b>{pageSafe}</b> of <b>{pageCount}</b> · <b>{visible.length}</b> instrument
+              {visible.length === 1 ? "" : "s"}
+            </span>
+            <button
+              className="pg-btn"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={pageSafe <= 1}
+              aria-label="Previous page"
+            >
+              ‹ prev
+            </button>
+            <button
+              className="pg-btn"
+              onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+              disabled={pageSafe >= pageCount}
+              aria-label="Next page"
+            >
+              next ›
+            </button>
+          </div>
+        )}
       </div>
 
       {open !== null && (

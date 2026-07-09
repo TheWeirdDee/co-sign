@@ -207,7 +207,15 @@ a.read:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .board-meta{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone-dim)}
 .board-meta b{color:var(--bone);font-weight:500}
 
-.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;padding-bottom:80px}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;padding-bottom:24px}
+
+.pagination{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding-bottom:80px}
+.pagination .pg-count{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--bone-dim);margin-right:4px}
+.pagination .pg-count b{color:var(--bone);font-weight:500}
+.pagination .pg-btn{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone-dim);background:transparent;border:1px solid var(--hairline);border-radius:2px;padding:7px 13px;cursor:pointer;transition:.15s}
+.pagination .pg-btn:hover:not(:disabled){color:var(--bone);border-color:var(--bone-dim)}
+.pagination .pg-btn:disabled{opacity:.3;cursor:default}
+.pagination .pg-btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .jobcard{background:var(--ink-raised);border:1px solid var(--hairline);border-radius:4px;padding:0;text-align:left;cursor:pointer;transition:border-color .2s;display:flex;flex-direction:column;font-family:var(--body);color:var(--bone)}
 .jobcard:hover{border-color:var(--bone-dim)}
 .jobcard:focus-visible{outline:2px solid var(--brass);outline-offset:2px}

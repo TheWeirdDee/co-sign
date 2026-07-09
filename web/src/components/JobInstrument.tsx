@@ -144,15 +144,17 @@ export default function JobInstrument({ jobId }: { jobId: bigint }) {
     let cancelled = false;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // First load deserves a fast retry, not a 30s wait stuck on "Reading the
-    // instrument..." over one rate-limited request.
-    const attempt = async () => {
+    // First load deserves faster retries than the 30s poll -- but capped and
+    // backed off, or a sustained outage turns this into a retry storm that
+    // makes the rate-limiting worse instead of recovering from it.
+    const RETRY_SCHEDULE = [4_000, 8_000, 16_000];
+    const attempt = async (retryIndex: number) => {
       const ok = await refresh();
-      if (!ok && !loadedOnce.current && !cancelled) {
-        retryTimer = setTimeout(attempt, 4_000);
+      if (!ok && !loadedOnce.current && !cancelled && retryIndex < RETRY_SCHEDULE.length) {
+        retryTimer = setTimeout(() => attempt(retryIndex + 1), RETRY_SCHEDULE[retryIndex]);
       }
     };
-    attempt();
+    attempt(0);
 
     const t = setInterval(refresh, 30_000);
     return () => {

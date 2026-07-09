@@ -137,16 +137,18 @@ export default function Board() {
     let cancelled = false;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // First load deserves a fast retry, not a 60s wait staring at "Reading
-    // the chain..." over one rate-limited request — subsequent polls back
-    // off to the normal cadence once something has actually loaded.
-    const attempt = async () => {
+    // First load deserves faster retries than the 60s poll -- but capped and
+    // backed off, or a sustained outage turns this into a retry storm that
+    // makes the rate-limiting worse instead of recovering from it. 4s, 8s,
+    // 16s, 30s, then give up fast retrying and just wait for the 60s poll.
+    const RETRY_SCHEDULE = [4_000, 8_000, 16_000, 30_000];
+    const attempt = async (retryIndex: number) => {
       const ok = await refresh();
-      if (!ok && !loadedOnce.current && !cancelled) {
-        retryTimer = setTimeout(attempt, 4_000);
+      if (!ok && !loadedOnce.current && !cancelled && retryIndex < RETRY_SCHEDULE.length) {
+        retryTimer = setTimeout(() => attempt(retryIndex + 1), RETRY_SCHEDULE[retryIndex]);
       }
     };
-    attempt();
+    attempt(0);
 
     // 60s: the Hiro free tier rate-limits aggressive polling (surfaces as CORS)
     const t = setInterval(refresh, 60_000);
